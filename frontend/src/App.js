@@ -873,45 +873,36 @@ export default function App() {
 
         {/* Detail */}
         <div style={{ flex: 1, overflowY: "auto", padding: 28 }}>
-          {adminTab === "usuarios" && editingUser ? (
+          {adminTab === "usuarios" &&  editingUser && (
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28 }}>
               <h2 style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "serif" }}>Detalles del Usuario</h2>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px", marginBottom: 20 }}>
-                <div>
-                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nombre</div>
-                  <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.nombre}</div>
-                </div>
-                <div>
-                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Email</div>
-                  <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.email}</div>
-                </div>
-                <div>
-                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Rol</div>
-                  <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}</div>
-                </div>
-                <div>
-                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Estado</div>
-                  <div style={{ color: editingUser.is_active ? C.success : C.danger, fontSize: 15, fontWeight: 500 }}>{editingUser.is_active ? "✅ Activo" : "❌ Inactivo"}</div>
-                </div>
+                <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nombre</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.nombre}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Email</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.email}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Rol</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Estado</div><div style={{ color: editingUser.is_active ? C.success : C.danger, fontSize: 15, fontWeight: 500 }}>{editingUser.is_active ? "✅ Activo" : "❌ Inactivo"}</div></div>
               </div>
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
                 <Btn variant="ghost" onClick={() => setEditingUser(null)}>Cerrar</Btn>
                 <Btn onClick={() => setModal("editUser")}>✏️ Editar</Btn>
               </div>
             </div>
-          ) : adminTab === "usuarios" ? (
+          )}
+          {adminTab === "usuarios" && !editingUser && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: C.border }}>
               <div style={{ fontSize: 64, marginBottom: 16, filter: "grayscale(1)" }}>👥</div>
               <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>Seleccione un usuario</div>
               <div style={{ fontSize: 13, color: C.border, marginTop: 6 }}>o cree uno nuevo</div>
             </div>
-          ) : !selected ? (
+          )}
+          {adminTab === "pacientes" && !selected && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: C.border }}>
               <div style={{ fontSize: 64, marginBottom: 16, filter: "grayscale(1)" }}>🌸</div>
               <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>Seleccione una paciente</div>
               <div style={{ fontSize: 13, color: C.border, marginTop: 6 }}>o cree una nueva ficha</div>
             </div>
-          ) : (
+          )}
+          {adminTab === "pacientes" && selected && (
             <>
               {/* Ficha paciente */}
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28, marginBottom: 22 }}>
