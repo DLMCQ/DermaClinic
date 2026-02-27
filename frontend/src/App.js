@@ -572,6 +572,16 @@ export default function App() {
     }
   }, []);
 
+  // Cargar usuarios (Admin)
+  const loadUsuarios = useCallback(async () => {
+    try {
+      const data = await api.getUsuarios();
+      setUsuarios(data);
+    } catch (e) {
+      showToast("Error al cargar usuarios: " + e.message, "error");
+    }
+  }, []);
+
   useEffect(() => { loadPatients(); }, [loadPatients]);
 
   // Cargar usuarios cuando se abre la vista de admin
@@ -680,16 +690,7 @@ export default function App() {
     }
   };
 
-  // CRUD Usuarios (Admin)
-  const loadUsuarios = useCallback(async () => {
-    try {
-      const data = await api.getUsuarios();
-      setUsuarios(data);
-    } catch (e) {
-      showToast("Error al cargar usuarios: " + e.message, "error");
-    }
-  }, []);
-
+  // CRUD Usuarios (Admin) - saveUsuario
   const saveUsuario = async (form) => {
     setLoading(true);
     try {
