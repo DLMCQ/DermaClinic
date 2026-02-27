@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import PatientsPage from "./pages/PatientsPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
+import UsersPage from "./pages/UsersPage";
 
 export default function App() {
   return (
@@ -24,6 +25,14 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/pacientes" element={<PatientsPage />} />
             <Route path="/citas" element={<AppointmentsPage />} />
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <UsersPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

@@ -8,7 +8,6 @@ import { Modal } from "../components/common/Modal";
 import { Toast } from "../components/common/Toast";
 import { PatientForm } from "../components/patients/PatientForm";
 import { SessionForm } from "../components/sessions/SessionForm";
-import { UserForm } from "../components/auth/UserForm";
 import { C, inputStyle } from "../utils/theme";
 import { formatDate, calcAge, generatePDF } from "../utils/helpers";
 
@@ -34,9 +33,6 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  const [adminTab, setAdminTab] = useState("pacientes");
-  const [usuarios, setUsuarios] = useState([]);
-  const [editingUser, setEditingUser] = useState(null);
   const searchTimeout = useRef();
   const isMobile = useIsMobile();
   const [mobileView, setMobileView] = useState("list");
@@ -54,22 +50,7 @@ export default function PatientsPage() {
     }
   }, []);
 
-  const loadUsuarios = useCallback(async () => {
-    try {
-      const data = await api.getUsuarios();
-      setUsuarios(data);
-    } catch (e) {
-      showToast("Error al cargar usuarios: " + e.message, "error");
-    }
-  }, []);
-
   useEffect(() => { loadPatients(); }, [loadPatients]);
-
-  useEffect(() => {
-    if (user?.role === "admin" && adminTab === "usuarios") {
-      loadUsuarios();
-    }
-  }, [adminTab, user?.role, loadUsuarios]);
 
   useEffect(() => {
     clearTimeout(searchTimeout.current);
@@ -191,75 +172,8 @@ export default function PatientsPage() {
     }
   };
 
-  // CRUD Usuarios
-  const saveUsuario = async (form) => {
-    setLoading(true);
-    try {
-      if (editingUser) {
-        const updated = await api.updateUsuario(editingUser.id, form);
-        setUsuarios((us) =>
-          us.map((u) => (u.id === editingUser.id ? updated : u))
-        );
-        showToast("Usuario actualizado");
-      } else {
-        const newU = await api.createUsuario(form);
-        setUsuarios((us) =>
-          [newU, ...us].sort((a, b) => a.email.localeCompare(b.email))
-        );
-        showToast("Usuario creado correctamente");
-      }
-      setModal(null);
-      setEditingUser(null);
-    } catch (e) {
-      showToast(e.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteUsuario = (id) => setConfirmDelete({ type: "user", id });
-
-  const doDeleteUsuario = async () => {
-    setLoading(true);
-    try {
-      await api.deleteUsuario(confirmDelete.id);
-      setUsuarios((us) => us.filter((u) => u.id !== confirmDelete.id));
-      showToast("Usuario eliminado");
-    } catch (e) {
-      showToast(e.message, "error");
-    } finally {
-      setLoading(false);
-      setConfirmDelete(null);
-    }
-  };
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", color: C.text }}>
-
-      {/* Tab selector (admin) */}
-      {user?.role === "admin" && (
-        <div style={{ display: "flex", gap: 8, padding: "12px 16px 0", borderBottom: `1px solid ${C.border}`, background: "#120f0b" }}>
-          {[["pacientes", "🌸 Pacientes"], ["usuarios", "👥 Usuarios"]].map(([tab, label]) => (
-            <button
-              key={tab}
-              onClick={() => { setAdminTab(tab); setMobileView("list"); setSelected(null); }}
-              style={{
-                background: adminTab === tab ? "rgba(201,169,110,0.12)" : "transparent",
-                border: "none",
-                borderBottom: adminTab === tab ? `2px solid ${C.gold}` : "2px solid transparent",
-                color: adminTab === tab ? C.gold : C.muted,
-                padding: "8px 16px",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: 13,
-                fontWeight: adminTab === tab ? 600 : 400,
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Layout */}
       <div
@@ -286,27 +200,17 @@ export default function PatientsPage() {
           }}
         >
           <div style={{ padding: "18px 16px 14px" }}>
-            {adminTab === "pacientes" ? (
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="🔍 Buscar por nombre o DNI..."
-                  style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "9px 12px" }}
-                />
-                <Btn onClick={() => setModal("newPatient")}>+ Nueva</Btn>
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <Btn style={{ flex: 1 }} onClick={() => setModal("newUser")}>
-                  + Nuevo Usuario
-                </Btn>
-              </div>
-            )}
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="🔍 Buscar por nombre o DNI..."
+                style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "9px 12px" }}
+              />
+              <Btn onClick={() => setModal("newPatient")}>+ Nueva</Btn>
+            </div>
             <div style={{ color: C.muted, fontSize: 12 }}>
-              {adminTab === "pacientes"
-                ? `${patients.length} paciente${patients.length !== 1 ? "s" : ""}`
-                : `${usuarios.length} usuario${usuarios.length !== 1 ? "s" : ""}`}
+              {patients.length} paciente{patients.length !== 1 ? "s" : ""}
             </div>
           </div>
           <div
@@ -319,174 +223,88 @@ export default function PatientsPage() {
               gap: 8,
             }}
           >
-            {adminTab === "pacientes" ? (
-              <>
-                {pageLoading ? (
-                  <div style={{ color: C.muted, textAlign: "center", padding: 40 }}>
-                    Conectando con el servidor...
-                  </div>
-                ) : patients.length === 0 ? (
-                  <div
-                    style={{
-                      color: C.muted,
-                      textAlign: "center",
-                      padding: 40,
-                      fontSize: 14,
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    {search
-                      ? "Sin resultados para la búsqueda."
-                      : "No hay pacientes registradas.\nHaga clic en '+ Nueva' para comenzar."}
-                  </div>
-                ) : (
-                  patients.map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => selectPatient(p)}
-                      style={{
-                        background:
-                          selected?.id === p.id
-                            ? "rgba(201,169,110,0.1)"
-                            : C.surface,
-                        border: `1px solid ${selected?.id === p.id ? C.gold : C.border}`,
-                        borderRadius: 14,
-                        padding: "14px 16px",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (selected?.id !== p.id)
-                          e.currentTarget.style.borderColor = `${C.gold}88`;
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selected?.id !== p.id)
-                          e.currentTarget.style.borderColor = C.border;
-                      }}
-                    >
-                      <Avatar url={p.foto_url} name={p.nombre} size={48} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            color: C.text,
-                            fontWeight: 700,
-                            fontSize: 15,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {p.nombre}
-                        </div>
-                        <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>
-                          DNI: {p.dni}
-                          {p.fecha_nacimiento ? ` · ${calcAge(p.fecha_nacimiento)} años` : ""}
-                        </div>
-                        <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>
-                          {p.total_sesiones}{" "}
-                          {p.total_sesiones != 1 ? "sesiones" : "sesión"}
-                        </div>
-                      </div>
-                      <Btn
-                        variant="danger"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deletePatient(p.id);
-                        }}
-                        style={{ padding: "5px 10px" }}
-                      >
-                        🗑
-                      </Btn>
-                    </div>
-                  ))
-                )}
-              </>
+            {pageLoading ? (
+              <div style={{ color: C.muted, textAlign: "center", padding: 40 }}>
+                Conectando con el servidor...
+              </div>
+            ) : patients.length === 0 ? (
+              <div
+                style={{
+                  color: C.muted,
+                  textAlign: "center",
+                  padding: 40,
+                  fontSize: 14,
+                  lineHeight: 1.8,
+                }}
+              >
+                {search
+                  ? "Sin resultados para la búsqueda."
+                  : "No hay pacientes registradas.\nHaga clic en '+ Nueva' para comenzar."}
+              </div>
             ) : (
-              <>
-                {usuarios.length === 0 ? (
-                  <div
-                    style={{
-                      color: C.muted,
-                      textAlign: "center",
-                      padding: 40,
-                      fontSize: 14,
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    No hay usuarios registrados.
-                  </div>
-                ) : (
-                  usuarios.map((u) => (
+              patients.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => selectPatient(p)}
+                  style={{
+                    background:
+                      selected?.id === p.id
+                        ? "rgba(201,169,110,0.1)"
+                        : C.surface,
+                    border: `1px solid ${selected?.id === p.id ? C.gold : C.border}`,
+                    borderRadius: 14,
+                    padding: "14px 16px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selected?.id !== p.id)
+                      e.currentTarget.style.borderColor = `${C.gold}88`;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selected?.id !== p.id)
+                      e.currentTarget.style.borderColor = C.border;
+                  }}
+                >
+                  <Avatar url={p.foto_url} name={p.nombre} size={48} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
-                      key={u.id}
-                      onClick={() => {
-                        setEditingUser(u);
-                        if (isMobile) setMobileView("detail");
-                      }}
                       style={{
-                        background:
-                          editingUser?.id === u.id
-                            ? "rgba(201,169,110,0.1)"
-                            : C.surface,
-                        border: `1px solid ${editingUser?.id === u.id ? C.gold : C.border}`,
-                        borderRadius: 14,
-                        padding: "14px 16px",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (editingUser?.id !== u.id)
-                          e.currentTarget.style.borderColor = `${C.gold}88`;
-                      }}
-                      onMouseLeave={(e) => {
-                        if (editingUser?.id !== u.id)
-                          e.currentTarget.style.borderColor = C.border;
+                        color: C.text,
+                        fontWeight: 700,
+                        fontSize: 15,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      <Avatar name={u.nombre} size={48} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            color: C.text,
-                            fontWeight: 700,
-                            fontSize: 15,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {u.nombre}
-                        </div>
-                        <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>
-                          {u.username}
-                        </div>
-                        <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>
-                          Rol:{" "}
-                          {u.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}
-                        </div>
-                      </div>
-                      <Btn
-                        variant="danger"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteUsuario(u.id);
-                        }}
-                        style={{ padding: "5px 10px" }}
-                      >
-                        🗑
-                      </Btn>
+                      {p.nombre}
                     </div>
-                  ))
-                )}
-              </>
+                    <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>
+                      DNI: {p.dni}
+                      {p.fecha_nacimiento ? ` · ${calcAge(p.fecha_nacimiento)} años` : ""}
+                    </div>
+                    <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>
+                      {p.total_sesiones}{" "}
+                      {p.total_sesiones != 1 ? "sesiones" : "sesión"}
+                    </div>
+                  </div>
+                  <Btn
+                    variant="danger"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePatient(p.id);
+                    }}
+                    style={{ padding: "5px 10px" }}
+                  >
+                    🗑
+                  </Btn>
+                </div>
+              ))
             )}
           </div>
         </div>
@@ -500,7 +318,7 @@ export default function PatientsPage() {
             display: isMobile && mobileView === "list" ? "none" : "block",
           }}
         >
-          {isMobile && (mobileView === "detail" || adminTab === "usuarios") && (
+          {isMobile && mobileView === "detail" && (
             <button
               onClick={() => setMobileView("list")}
               style={{
@@ -522,82 +340,7 @@ export default function PatientsPage() {
             </button>
           )}
 
-          {/* Vista usuarios */}
-          {adminTab === "usuarios" && editingUser && (
-            <div
-              style={{
-                background: C.surface,
-                border: `1px solid ${C.border}`,
-                borderRadius: 18,
-                padding: 28,
-              }}
-            >
-              <h2
-                style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "serif" }}
-              >
-                Detalles del Usuario
-              </h2>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "0 20px",
-                  marginBottom: 20,
-                }}
-              >
-                {[
-                  ["Nombre", editingUser.nombre],
-                  ["Nombre de Usuario", editingUser.username],
-                  ["Rol", editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"],
-                  ["Estado", editingUser.is_active ? "✅ Activo" : "❌ Inactivo"],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <div
-                      style={{
-                        color: C.muted,
-                        fontSize: 12,
-                        marginBottom: 6,
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
-                    >
-                      {k}
-                    </div>
-                    <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>
-                      {v}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <Btn variant="ghost" onClick={() => setEditingUser(null)}>
-                  Cerrar
-                </Btn>
-                <Btn onClick={() => setModal("editUser")}>✏️ Editar</Btn>
-              </div>
-            </div>
-          )}
-
-          {adminTab === "usuarios" && !editingUser && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                color: C.border,
-              }}
-            >
-              <div style={{ fontSize: 64, marginBottom: 16, filter: "grayscale(1)" }}>👥</div>
-              <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>
-                Seleccione un usuario
-              </div>
-              <div style={{ fontSize: 13, color: C.border, marginTop: 6 }}>o cree uno nuevo</div>
-            </div>
-          )}
-
-          {adminTab === "pacientes" && !selected && (
+          {!selected && (
             <div
               style={{
                 display: "flex",
@@ -619,7 +362,7 @@ export default function PatientsPage() {
           )}
 
           {/* Ficha paciente */}
-          {adminTab === "pacientes" && selected && (
+          {selected && (
             <>
               <div
                 style={{
@@ -1002,32 +745,12 @@ export default function PatientsPage() {
           />
         </Modal>
       )}
-      {modal === "newUser" && (
-        <Modal title="Nuevo Usuario" onClose={() => setModal(null)}>
-          <UserForm onSave={saveUsuario} onClose={() => setModal(null)} loading={loading} />
-        </Modal>
-      )}
-      {modal === "editUser" && editingUser && (
-        <Modal
-          title="Editar Usuario"
-          onClose={() => { setModal(null); setEditingUser(null); }}
-        >
-          <UserForm
-            user={editingUser}
-            onSave={saveUsuario}
-            onClose={() => { setModal(null); setEditingUser(null); }}
-            loading={loading}
-          />
-        </Modal>
-      )}
       {confirmDelete && (
         <Modal title="Confirmar eliminación" onClose={() => setConfirmDelete(null)}>
           <p style={{ color: C.goldLight, marginBottom: 24, lineHeight: 1.6 }}>
             {confirmDelete.type === "patient"
               ? "¿Eliminar esta paciente y todo su historial de sesiones? Esta acción no se puede deshacer."
-              : confirmDelete.type === "session"
-              ? "¿Eliminar esta sesión? Esta acción no se puede deshacer."
-              : "¿Eliminar este usuario? Esta acción no se puede deshacer."}
+              : "¿Eliminar esta sesión? Esta acción no se puede deshacer."}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
             <Btn
@@ -1041,11 +764,7 @@ export default function PatientsPage() {
               variant="danger"
               disabled={loading}
               onClick={
-                confirmDelete.type === "patient"
-                  ? doDeletePatient
-                  : confirmDelete.type === "session"
-                  ? doDeleteSession
-                  : doDeleteUsuario
+                confirmDelete.type === "patient" ? doDeletePatient : doDeleteSession
               }
             >
               {loading ? "Eliminando..." : "Sí, eliminar"}
