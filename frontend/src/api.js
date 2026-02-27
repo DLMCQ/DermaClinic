@@ -5,6 +5,13 @@ async function request(method, path, body) {
     method,
     headers: { "Content-Type": "application/json" },
   };
+
+  // Agregar token si existe
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    opts.headers.Authorization = `Bearer ${token}`;
+  }
+
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE}/api${path}`, opts);
   const data = await res.json();
@@ -13,6 +20,14 @@ async function request(method, path, body) {
 }
 
 export const api = {
+  // Autenticación
+  login: (email, password) => request("POST", "/auth/login", { email, password }),
+  logout: () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+  },
+
   // Pacientes
   getPacientes: (q) => request("GET", q ? `/pacientes?q=${encodeURIComponent(q)}` : "/pacientes"),
   getPaciente: (id) => request("GET", `/pacientes/${id}`),

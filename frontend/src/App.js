@@ -316,8 +316,204 @@ function SessionForm({ session, onSave, onClose, loading }) {
   );
 }
 
+// ─── Componente Login ──────────────────────────────────────────────────────────
+function LoginPage({ onLogin }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError("Email y contraseña requeridos");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.login(email, password);
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshToken", response.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      onLogin(response.user);
+    } catch (err) {
+      setError(err.message || "Error al iniciar sesión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: C.bg,
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      <div
+        style={{
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 20,
+          padding: 48,
+          maxWidth: 420,
+          width: "100%",
+          boxShadow: "0 30px 100px rgba(0,0,0,0.9)",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 32,
+              margin: "0 auto 16px",
+            }}
+          >
+            ⚕
+          </div>
+          <h1
+            style={{
+              margin: "0 0 8px",
+              fontSize: 28,
+              color: C.gold,
+              fontFamily: "serif",
+              fontWeight: 700,
+            }}
+          >
+            DermaClinic
+          </h1>
+          <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>
+            Sistema de Gestión
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: 18 }}>
+            <label
+              style={{
+                display: "block",
+                color: C.goldLight,
+                fontSize: 11,
+                marginBottom: 6,
+                fontWeight: 600,
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+              }}
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="correo@ejemplo.com"
+              disabled={loading}
+              style={{
+                ...inputStyle,
+                opacity: loading ? 0.5 : 1,
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <label
+              style={{
+                display: "block",
+                color: C.goldLight,
+                fontSize: 11,
+                marginBottom: 6,
+                fontWeight: 600,
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+              }}
+            >
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              disabled={loading}
+              style={{
+                ...inputStyle,
+                opacity: loading ? 0.5 : 1,
+              }}
+            />
+          </div>
+
+          {error && (
+            <div
+              style={{
+                background: "rgba(224,90,90,0.1)",
+                border: `1px solid ${C.danger}`,
+                color: C.danger,
+                padding: "10px 14px",
+                borderRadius: 8,
+                fontSize: 13,
+                marginBottom: 18,
+                fontWeight: 500,
+              }}
+            >
+              ❌ {error}
+            </div>
+          )}
+
+          <Btn
+            onClick={handleLogin}
+            disabled={loading}
+            style={{
+              width: "100%",
+              fontSize: 15,
+              fontWeight: 700,
+              padding: "14px 20px",
+            }}
+          >
+            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          </Btn>
+        </form>
+
+        <div
+          style={{
+            marginTop: 20,
+            padding: 12,
+            background: C.bg,
+            borderRadius: 8,
+            fontSize: 12,
+            color: C.muted,
+            lineHeight: 1.6,
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 6, color: C.gold }}>
+            Credenciales de prueba:
+          </div>
+          demo@dermaclinic.com / password
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── App Principal ─────────────────────────────────────────────────────────────
 export default function App() {
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState(null); // paciente seleccionado (con sesiones)
   const [search, setSearch] = useState("");
@@ -448,19 +644,40 @@ export default function App() {
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } input:focus, select:focus, textarea:focus { border-color: ${C.gold} !important; }`}</style>
 
-      {/* Header */}
-      <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "0 28px", display: "flex", alignItems: "center", height: 66, gap: 20 }}>
-        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚕</div>
-        <div>
-          <div style={{ color: C.gold, fontWeight: 700, fontSize: 17, fontFamily: "serif", letterSpacing: 0.5 }}>DermaClinic</div>
-          <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>Sistema de Gestión · Red Local</div>
-        </div>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.success }} />
-          <span style={{ color: C.muted, fontSize: 12 }}>Servidor activo</span>
-        </div>
-      </div>
+      {!user ? (
+        <LoginPage onLogin={setUser} />
+      ) : (
+        <>
+          {/* Header */}
+          <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "0 28px", display: "flex", alignItems: "center", height: 66, gap: 20 }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚕</div>
+            <div>
+              <div style={{ color: C.gold, fontWeight: 700, fontSize: 17, fontFamily: "serif", letterSpacing: 0.5 }}>DermaClinic</div>
+              <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>Sistema de Gestión · Red Local</div>
+            </div>
+            <div style={{ flex: 1 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.success }} />
+                <span style={{ color: C.muted, fontSize: 12 }}>Servidor activo</span>
+              </div>
+              <div style={{ height: 20, width: 1, background: C.border }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>{user.email || "Usuario"}</span>
+                <Btn
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    api.logout();
+                    setUser(null);
+                  }}
+                  style={{ padding: "5px 10px" }}
+                >
+                  Cerrar sesión
+                </Btn>
+              </div>
+            </div>
+          </div>
 
       {/* Layout */}
       <div style={{ display: "flex", height: "calc(100vh - 66px)" }}>
@@ -661,6 +878,8 @@ export default function App() {
 
       {/* Toast */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        </>
+      )}
     </div>
   );
 }

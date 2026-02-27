@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "watchPaths": ["backend/**", "frontend/**"]
+  },
+  "deploy": {
+    "startCommand": "cd backend && npm start",
+    "restartPolicyType": "on_failure",
+    "restartPolicyMaxRetries": 5
+  }
+}
