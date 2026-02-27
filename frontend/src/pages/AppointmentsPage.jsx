@@ -14,8 +14,8 @@ moment.locale("es");
 const localizer = momentLocalizer(moment);
 
 const ESTADO_COLORS = {
-  pendiente: "#c9a96e",
-  confirmada: "#5a9e6f",
+  pendiente: "#887043",
+  confirmada: "#376a47",
   cancelada: "#e05a5a",
 };
 
@@ -41,7 +41,7 @@ const calendarStyles = `
   .rbc-timeslot-group { border-color: #3a2e24 !important; }
   .rbc-time-content { border-color: #3a2e24 !important; }
   .rbc-time-header-content { border-color: #3a2e24 !important; }
-  .rbc-current-time-indicator { background: #c9a96e; }
+  .rbc-current-time-indicator { background: #3a2e24; }
   .rbc-show-more { color: #c9a96e; background: transparent; font-size: 12px; }
   .rbc-agenda-table { border-color: #3a2e24; }
   .rbc-agenda-table td, .rbc-agenda-table th { border-color: #3a2e24 !important; color: #e8d5b7; }
@@ -224,7 +224,7 @@ export default function AppointmentsPage() {
     const color = ESTADO_COLORS[event.resource.estado] || C.gold;
     return {
       style: {
-        backgroundColor: `${color}60`,
+        backgroundColor: `${color}90`,
         border: `1px solid ${color}90`,
         color: color,
         fontWeight: 600,
