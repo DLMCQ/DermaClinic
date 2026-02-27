@@ -224,8 +224,8 @@ export default function AppointmentsPage() {
     const color = ESTADO_COLORS[event.resource.estado] || C.gold;
     return {
       style: {
-        backgroundColor: `${color}40`,
-        border: `1px solid ${color}`,
+        backgroundColor: `${color}60`,
+        border: `1px solid ${color}90`,
         color: color,
         fontWeight: 600,
         boxShadow: `0 1px 4px ${color}30`,
