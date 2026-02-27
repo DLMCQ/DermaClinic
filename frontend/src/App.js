@@ -316,6 +316,36 @@ function SessionForm({ session, onSave, onClose, loading }) {
   );
 }
 
+// ─── Formulario Usuario ───────────────────────────────────────────────────────
+function UserForm({ user, onSave, onClose, loading }) {
+  const [form, setForm] = useState(user ? {
+    email: user.email || "", nombre: user.nombre || "", role: user.role || "doctor", password: "",
+  } : { email: "", nombre: "", role: "doctor", password: "" });
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+        <Input label="Email" value={form.email} onChange={set("email")} type="email" required />
+        <Input label="Nombre completo" value={form.nombre} onChange={set("nombre")} required />
+        <Select label="Rol" value={form.role} onChange={set("role")} options={["doctor", "admin"]} required />
+        <Input label={user ? "Nueva contraseña (opcional)" : "Contraseña"} value={form.password} onChange={set("password")} type="password" placeholder={user ? "Dejar en blanco para no cambiar" : "••••••••"} required={!user} />
+      </div>
+      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+        <Btn variant="ghost" onClick={onClose} disabled={loading}>Cancelar</Btn>
+        <Btn disabled={loading} onClick={() => {
+          if (!form.email.trim() || !form.nombre.trim()) { alert("Email y nombre son obligatorios"); return; }
+          if (!user && !form.password.trim()) { alert("Contraseña requerida para nuevo usuario"); return; }
+          onSave(form);
+        }}>
+          {loading ? "Guardando..." : user ? "Guardar cambios" : "Crear usuario"}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
 // ─── Componente Login ──────────────────────────────────────────────────────────
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -523,6 +553,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [adminTab, setAdminTab] = useState("pacientes"); // "pacientes" o "usuarios"
+  const [usuarios, setUsuarios] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
   const searchTimeout = useRef();
 
   const showToast = (message, type = "success") => setToast({ message, type });
@@ -540,6 +573,13 @@ export default function App() {
   }, []);
 
   useEffect(() => { loadPatients(); }, [loadPatients]);
+
+  // Cargar usuarios cuando se abre la vista de admin
+  useEffect(() => {
+    if (user?.role === "admin" && adminTab === "usuarios") {
+      loadUsuarios();
+    }
+  }, [adminTab, user?.role, loadUsuarios]);
 
   // Búsqueda con debounce
   useEffect(() => {
@@ -640,6 +680,53 @@ export default function App() {
     }
   };
 
+  // CRUD Usuarios (Admin)
+  const loadUsuarios = useCallback(async () => {
+    try {
+      const data = await api.getUsuarios();
+      setUsuarios(data);
+    } catch (e) {
+      showToast("Error al cargar usuarios: " + e.message, "error");
+    }
+  }, []);
+
+  const saveUsuario = async (form) => {
+    setLoading(true);
+    try {
+      if (editingUser) {
+        const updated = await api.updateUsuario(editingUser.id, form);
+        setUsuarios((us) => us.map((u) => u.id === editingUser.id ? updated : u));
+        showToast("Usuario actualizado");
+      } else {
+        const newU = await api.createUsuario(form);
+        setUsuarios((us) => [newU, ...us].sort((a, b) => a.email.localeCompare(b.email)));
+        showToast("Usuario creado correctamente");
+      }
+      setModal(null);
+      setEditingUser(null);
+    } catch (e) {
+      showToast(e.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUsuario = (id) => setConfirmDelete({ type: "user", id });
+
+  const doDeleteUsuario = async () => {
+    setLoading(true);
+    try {
+      await api.deleteUsuario(confirmDelete.id);
+      setUsuarios((us) => us.filter((u) => u.id !== confirmDelete.id));
+      showToast("Usuario eliminado");
+    } catch (e) {
+      showToast(e.message, "error");
+    } finally {
+      setLoading(false);
+      setConfirmDelete(null);
+    }
+  };
+
   return (
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } input:focus, select:focus, textarea:focus { border-color: ${C.gold} !important; }`}</style>
@@ -664,6 +751,19 @@ export default function App() {
               <div style={{ height: 20, width: 1, background: C.border }} />
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>{user.email || "Usuario"}</span>
+                {user.role === "admin" && (
+                  <>
+                    <div style={{ height: 16, width: 1, background: C.border }} />
+                    <Btn
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAdminTab(adminTab === "pacientes" ? "usuarios" : "pacientes")}
+                      style={{ padding: "5px 10px" }}
+                    >
+                      {adminTab === "usuarios" ? "👥 Usuarios" : "👤 Gestión"}
+                    </Btn>
+                  </>
+                )}
                 <Btn
                   variant="ghost"
                   size="sm"
@@ -684,54 +784,128 @@ export default function App() {
         {/* Sidebar */}
         <div style={{ width: 340, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", background: "#120f0b", flexShrink: 0 }}>
           <div style={{ padding: "18px 16px 14px" }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-              <input
-                value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="🔍 Buscar por nombre o DNI..."
-                style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "9px 12px" }}
-              />
-              <Btn onClick={() => setModal("newPatient")}>+ Nueva</Btn>
-            </div>
+            {adminTab === "pacientes" ? (
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <input
+                  value={search} onChange={(e) => setSearch(e.target.value)}
+                  placeholder="🔍 Buscar por nombre o DNI..."
+                  style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "9px 12px" }}
+                />
+                <Btn onClick={() => setModal("newPatient")}>+ Nueva</Btn>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <Btn style={{ flex: 1 }} onClick={() => setModal("newUser")}>+ Nuevo Usuario</Btn>
+              </div>
+            )}
             <div style={{ color: C.muted, fontSize: 12 }}>
-              {pageLoading ? "Cargando..." : `${patients.length} paciente${patients.length !== 1 ? "s" : ""}`}
+              {adminTab === "pacientes"
+                ? `${patients.length} paciente${patients.length !== 1 ? "s" : ""}`
+                : `${usuarios.length} usuario${usuarios.length !== 1 ? "s" : ""}`}
             </div>
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
-            {pageLoading
-              ? <div style={{ color: C.muted, textAlign: "center", padding: 40 }}>Conectando con el servidor...</div>
-              : patients.length === 0
-                ? <div style={{ color: C.muted, textAlign: "center", padding: 40, fontSize: 14, lineHeight: 1.8 }}>
-                    {search ? "Sin resultados para la búsqueda." : "No hay pacientes registradas.\nHaga clic en '+ Nueva' para comenzar."}
-                  </div>
-                : patients.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => selectPatient(p)}
-                    style={{
-                      background: selected?.id === p.id ? "rgba(201,169,110,0.1)" : C.surface,
-                      border: `1px solid ${selected?.id === p.id ? C.gold : C.border}`,
-                      borderRadius: 14, padding: "14px 16px", cursor: "pointer", transition: "all 0.2s",
-                      display: "flex", alignItems: "center", gap: 14,
-                    }}
-                    onMouseEnter={(e) => { if (selected?.id !== p.id) e.currentTarget.style.borderColor = `${C.gold}88`; }}
-                    onMouseLeave={(e) => { if (selected?.id !== p.id) e.currentTarget.style.borderColor = C.border; }}
-                  >
-                    <Avatar url={p.foto_url} name={p.nombre} size={48} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: C.text, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nombre}</div>
-                      <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>DNI: {p.dni}{p.fecha_nacimiento ? ` · ${calcAge(p.fecha_nacimiento)} años` : ""}</div>
-                      <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>{p.total_sesiones} sesión{p.total_sesiones !== 1 ? "es" : ""}</div>
+            {adminTab === "pacientes" ? (
+              <>
+                {pageLoading
+                  ? <div style={{ color: C.muted, textAlign: "center", padding: 40 }}>Conectando con el servidor...</div>
+                  : patients.length === 0
+                    ? <div style={{ color: C.muted, textAlign: "center", padding: 40, fontSize: 14, lineHeight: 1.8 }}>
+                        {search ? "Sin resultados para la búsqueda." : "No hay pacientes registradas.\nHaga clic en '+ Nueva' para comenzar."}
+                      </div>
+                    : patients.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => selectPatient(p)}
+                        style={{
+                          background: selected?.id === p.id ? "rgba(201,169,110,0.1)" : C.surface,
+                          border: `1px solid ${selected?.id === p.id ? C.gold : C.border}`,
+                          borderRadius: 14, padding: "14px 16px", cursor: "pointer", transition: "all 0.2s",
+                          display: "flex", alignItems: "center", gap: 14,
+                        }}
+                        onMouseEnter={(e) => { if (selected?.id !== p.id) e.currentTarget.style.borderColor = `${C.gold}88`; }}
+                        onMouseLeave={(e) => { if (selected?.id !== p.id) e.currentTarget.style.borderColor = C.border; }}
+                      >
+                        <Avatar url={p.foto_url} name={p.nombre} size={48} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: C.text, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nombre}</div>
+                          <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>DNI: {p.dni}{p.fecha_nacimiento ? ` · ${calcAge(p.fecha_nacimiento)} años` : ""}</div>
+                          <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>{p.total_sesiones} sesión{p.total_sesiones !== 1 ? "es" : ""}</div>
+                        </div>
+                        <Btn variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); deletePatient(p.id); }} style={{ padding: "5px 10px" }}>🗑</Btn>
+                      </div>
+                    ))
+                }
+              </>
+            ) : (
+              <>
+                {usuarios.length === 0
+                  ? <div style={{ color: C.muted, textAlign: "center", padding: 40, fontSize: 14, lineHeight: 1.8 }}>
+                      No hay usuarios registrados.
                     </div>
-                    <Btn variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); deletePatient(p.id); }} style={{ padding: "5px 10px" }}>🗑</Btn>
-                  </div>
-                ))
-            }
+                  : usuarios.map((u) => (
+                    <div
+                      key={u.id}
+                      onClick={() => setEditingUser(u)}
+                      style={{
+                        background: editingUser?.id === u.id ? "rgba(201,169,110,0.1)" : C.surface,
+                        border: `1px solid ${editingUser?.id === u.id ? C.gold : C.border}`,
+                        borderRadius: 14, padding: "14px 16px", cursor: "pointer", transition: "all 0.2s",
+                        display: "flex", alignItems: "center", gap: 14,
+                      }}
+                      onMouseEnter={(e) => { if (editingUser?.id !== u.id) e.currentTarget.style.borderColor = `${C.gold}88`; }}
+                      onMouseLeave={(e) => { if (editingUser?.id !== u.id) e.currentTarget.style.borderColor = C.border; }}
+                    >
+                      <Avatar name={u.nombre} size={48} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: C.text, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.nombre}</div>
+                        <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>{u.email}</div>
+                        <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>Rol: {u.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}</div>
+                      </div>
+                      <Btn variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); deleteUsuario(u.id); }} style={{ padding: "5px 10px" }}>🗑</Btn>
+                    </div>
+                  ))
+                }
+              </>
+            )}
           </div>
         </div>
 
         {/* Detail */}
         <div style={{ flex: 1, overflowY: "auto", padding: 28 }}>
-          {!selected ? (
+          {adminTab === "usuarios" && editingUser ? (
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28 }}>
+              <h2 style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "serif" }}>Detalles del Usuario</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px", marginBottom: 20 }}>
+                <div>
+                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nombre</div>
+                  <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.nombre}</div>
+                </div>
+                <div>
+                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Email</div>
+                  <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.email}</div>
+                </div>
+                <div>
+                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Rol</div>
+                  <div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}</div>
+                </div>
+                <div>
+                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Estado</div>
+                  <div style={{ color: editingUser.is_active ? C.success : C.danger, fontSize: 15, fontWeight: 500 }}>{editingUser.is_active ? "✅ Activo" : "❌ Inactivo"}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+                <Btn variant="ghost" onClick={() => setEditingUser(null)}>Cerrar</Btn>
+                <Btn onClick={() => setModal("editUser")}>✏️ Editar</Btn>
+              </div>
+            </div>
+          ) : adminTab === "usuarios" ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: C.border }}>
+              <div style={{ fontSize: 64, marginBottom: 16, filter: "grayscale(1)" }}>👥</div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>Seleccione un usuario</div>
+              <div style={{ fontSize: 13, color: C.border, marginTop: 6 }}>o cree uno nuevo</div>
+            </div>
+          ) : !selected ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: C.border }}>
               <div style={{ fontSize: 64, marginBottom: 16, filter: "grayscale(1)" }}>🌸</div>
               <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>Seleccione una paciente</div>
@@ -860,16 +1034,28 @@ export default function App() {
           <SessionForm session={editingSession} onSave={saveSession} onClose={() => { setModal(null); setEditingSession(null); }} loading={loading} />
         </Modal>
       )}
+      {modal === "newUser" && (
+        <Modal title="Nuevo Usuario" onClose={() => setModal(null)}>
+          <UserForm onSave={saveUsuario} onClose={() => setModal(null)} loading={loading} />
+        </Modal>
+      )}
+      {modal === "editUser" && editingUser && (
+        <Modal title="Editar Usuario" onClose={() => { setModal(null); setEditingUser(null); }}>
+          <UserForm user={editingUser} onSave={saveUsuario} onClose={() => { setModal(null); setEditingUser(null); }} loading={loading} />
+        </Modal>
+      )}
       {confirmDelete && (
         <Modal title="Confirmar eliminación" onClose={() => setConfirmDelete(null)}>
           <p style={{ color: C.goldLight, marginBottom: 24, lineHeight: 1.6 }}>
             {confirmDelete.type === "patient"
               ? "¿Eliminar esta paciente y todo su historial de sesiones? Esta acción no se puede deshacer."
-              : "¿Eliminar esta sesión? Esta acción no se puede deshacer."}
+              : confirmDelete.type === "session"
+                ? "¿Eliminar esta sesión? Esta acción no se puede deshacer."
+                : "¿Eliminar este usuario? Esta acción no se puede deshacer."}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
             <Btn variant="ghost" onClick={() => setConfirmDelete(null)} disabled={loading}>Cancelar</Btn>
-            <Btn variant="danger" disabled={loading} onClick={confirmDelete.type === "patient" ? doDeletePatient : doDeleteSession}>
+            <Btn variant="danger" disabled={loading} onClick={confirmDelete.type === "patient" ? doDeletePatient : confirmDelete.type === "session" ? doDeleteSession : doDeleteUsuario}>
               {loading ? "Eliminando..." : "Sí, eliminar"}
             </Btn>
           </div>

@@ -39,4 +39,10 @@ export const api = {
   createSesion: (data) => request("POST", "/sesiones", data),
   updateSesion: (id, data) => request("PUT", `/sesiones/${id}`, data),
   deleteSesion: (id) => request("DELETE", `/sesiones/${id}`),
+
+  // Usuarios (solo admin)
+  getUsuarios: () => request("GET", "/users"),
+  createUsuario: (data) => request("POST", "/users", data),
+  updateUsuario: (id, data) => request("PUT", `/users/${id}`, data),
+  deleteUsuario: (id) => request("DELETE", `/users/${id}`),
 };
