@@ -75,18 +75,18 @@ router.post(
   validate(schemas.createUser),
   async (req, res, next) => {
     try {
-      const { email, password, nombre, role } = req.body;
+      const { username, password, nombre, role } = req.body;
       const db = getDb();
 
-      // Verificar que el email no exista
+      // Verificar que el username no exista
       const existing = await db.queryOne(
-        'SELECT id FROM users WHERE email = $1',
-        [email]
+        'SELECT id FROM users WHERE username = $1',
+        [username]
       );
 
       if (existing) {
         return res.status(409).json({
-          error: 'Ya existe un usuario con este email',
+          error: 'Ya existe un usuario con este nombre de usuario',
         });
       }
 
@@ -95,10 +95,10 @@ router.post(
 
       // Crear usuario
       const user = await db.queryOne(`
-        INSERT INTO users (email, password_hash, nombre, role)
+        INSERT INTO users (username, password_hash, nombre, role)
         VALUES ($1, $2, $3, $4)
-        RETURNING id, email, nombre, role, is_active, created_at
-      `, [email, password_hash, nombre, role]);
+        RETURNING id, username, nombre, role, is_active, created_at
+      `, [username, password_hash, nombre, role]);
 
       res.status(201).json(user);
     } catch (error) {
