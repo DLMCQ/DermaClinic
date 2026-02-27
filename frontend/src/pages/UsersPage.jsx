@@ -73,7 +73,10 @@ export default function UsersPage() {
     try {
       await api.deleteUsuario(confirmDelete.id);
       setUsuarios((us) => us.filter((u) => u.id !== confirmDelete.id));
-      if (editingUser?.id === confirmDelete.id) setEditingUser(null);
+      if (editingUser?.id === confirmDelete.id) {
+        setEditingUser(null);
+        setMobileView("list");
+      }
       showToast("Usuario eliminado");
     } catch (e) {
       showToast(e.message, "error");
@@ -268,7 +271,6 @@ export default function UsersPage() {
                   ["Nombre", editingUser.nombre],
                   ["Nombre de Usuario", editingUser.username],
                   ["Rol", editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"],
-                  ["Estado", editingUser.is_active ? "✅ Activo" : "❌ Inactivo"],
                 ].map(([k, v]) => (
                   <div key={k} style={{ marginBottom: 16 }}>
                     <div
