@@ -831,7 +831,7 @@ export default function App() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: C.text, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nombre}</div>
                           <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>DNI: {p.dni}{p.fecha_nacimiento ? ` · ${calcAge(p.fecha_nacimiento)} años` : ""}</div>
-                          <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>{p.total_sesiones} {p.total_sesiones > 1 ? "sesiones" : "sesión"}</div>
+                          <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>{p.total_sesiones} {p.total_sesiones != 1 ? "sesiones" : "sesión"}</div>
                         </div>
                         <Btn variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); deletePatient(p.id); }} style={{ padding: "5px 10px" }}>🗑</Btn>
                       </div>
