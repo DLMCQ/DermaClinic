@@ -37,7 +37,7 @@ router.post("/", authIfCloud, validate(schemas.createSesion), async (req, res, n
       );
     } else {
       await db.execute(
-        "INSERT INTO sesiones (id, paciente_id, fecha, tratamiento, productos, notas, imagen_antes_path, imagen_despues_path) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        "INSERT INTO sesiones (id, paciente_id, fecha, tratamiento, productos, notas, imagen_antes, imagen_despues) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
         [id, paciente_id, fecha, tratamiento, productos || null, notas || null, imagen_antes || null, imagen_despues || null]
       );
     }
@@ -73,7 +73,7 @@ router.put("/:id", authIfCloud, validate(schemas.updateSesion), async (req, res,
       );
     } else {
       await db.execute(
-        "UPDATE sesiones SET fecha=$1, tratamiento=$2, productos=$3, notas=$4, imagen_antes_path=$5, imagen_despues_path=$6 WHERE id=$7",
+        "UPDATE sesiones SET fecha=$1, tratamiento=$2, productos=$3, notas=$4, imagen_antes=$5, imagen_despues=$6 WHERE id=$7",
         [fecha, tratamiento, productos || null, notas || null, imagen_antes || null, imagen_despues || null, req.params.id]
       );
     }
