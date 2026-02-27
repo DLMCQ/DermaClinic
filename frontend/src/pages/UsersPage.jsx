@@ -54,9 +54,12 @@ export default function UsersPage() {
       } else {
         const newU = await api.createUsuario(form);
         setUsuarios((us) =>
-          [newU, ...us].sort((a, b) => a.email.localeCompare(b.email))
+          [newU, ...us].sort((a, b) =>
+            (a.nombre || a.username || "").localeCompare(b.nombre || b.username || "")
+          )
         );
         setEditingUser(newU);
+        if (isMobile) setMobileView("detail");
         showToast("Usuario creado correctamente");
       }
       setModal(null);
