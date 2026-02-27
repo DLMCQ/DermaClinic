@@ -50,7 +50,7 @@ export function AppLayout() {
     <div
       style={{
         width: 220,
-        background: "#120f0b",
+        background: C.surface,
         borderRight: `1px solid ${C.border}`,
         display: "flex",
         flexDirection: "column",
@@ -213,7 +213,7 @@ export function AppLayout() {
         {isMobile && (
           <div
             style={{
-              background: "#120f0b",
+              background: C.surface,
               borderBottom: `1px solid ${C.border}`,
               padding: "0 16px",
               height: 52,

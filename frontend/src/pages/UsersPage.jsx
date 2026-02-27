@@ -111,7 +111,7 @@ export default function UsersPage() {
               isMobile && mobileView === "list" ? `1px solid ${C.border}` : "none",
             display: isMobile && mobileView === "detail" ? "none" : "flex",
             flexDirection: "column",
-            background: "#120f0b",
+            background: C.surface,
             flexShrink: 0,
             overflow: "hidden",
           }}

@@ -22,30 +22,31 @@ const ESTADO_COLORS = {
 const ESTADOS = ["pendiente", "confirmada", "cancelada"];
 
 const calendarStyles = `
-  .rbc-calendar { background: transparent; color: #e8d5b7; font-family: 'DM Sans', sans-serif; }
-  .rbc-header { background: #1a1410; border-color: #3a2e24 !important; color: #a0896a; padding: 10px 4px; font-size: 13px; font-weight: 600; }
-  .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #3a2e24 !important; }
-  .rbc-day-bg { border-color: #3a2e24 !important; }
+  .rbc-calendar { background: transparent; color: #1a1410; font-family: 'DM Sans', sans-serif; }
+  .rbc-header { background: #f5f0ea; border-color: #e0d5c5 !important; color: #7a6a58; padding: 10px 4px; font-size: 13px; font-weight: 600; }
+  .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #e0d5c5 !important; }
+  .rbc-day-bg { border-color: #e0d5c5 !important; }
   .rbc-day-bg.rbc-today { background: transparent; }
-  .rbc-off-range-bg { background: #0f0c09; }
-  .rbc-date-cell { color: #666; font-size: 13px; padding: 4px 6px; }
-  .rbc-date-cell.rbc-now { color: #c9a96e; font-weight: 700; }
+  .rbc-off-range-bg { background: #f0ebe3; }
+  .rbc-date-cell { color: #7a6a58; font-size: 13px; padding: 4px 6px; }
+  .rbc-date-cell.rbc-now { color: #1a1410; font-weight: 700; text-decoration: underline; }
   .rbc-toolbar { margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
-  .rbc-toolbar button { background: #1a1410; border: 1px solid #3a2e24; color: #a0896a; padding: 7px 14px; border-radius: 8px; font-family: inherit; cursor: pointer; font-size: 13px; }
+  .rbc-toolbar button { background: #f5f0ea; border: 1px solid #e0d5c5; color: #7a6a58; padding: 7px 14px; border-radius: 8px; font-family: inherit; cursor: pointer; font-size: 13px; }
   .rbc-toolbar button:hover { border-color: #c9a96e; color: #c9a96e; }
   .rbc-toolbar button.rbc-active { background: rgba(201,169,110,0.15); border-color: #c9a96e; color: #c9a96e; }
   .rbc-toolbar-label { color: #c9a96e; font-weight: 700; font-family: serif; font-size: 18px; }
   .rbc-event { border-radius: 6px !important; border: none !important; font-size: 12px; padding: 2px 6px; }
   .rbc-event-label { font-size: 11px; }
-  .rbc-time-slot { border-color: #3a2e24 !important; }
-  .rbc-timeslot-group { border-color: #3a2e24 !important; }
-  .rbc-time-content { border-color: #3a2e24 !important; }
-  .rbc-time-header-content { border-color: #3a2e24 !important; }
+  .rbc-time-slot { border-color: #e0d5c5 !important; }
+  .rbc-timeslot-group { border-color: #e0d5c5 !important; }
+  .rbc-time-content { border-color: #e0d5c5 !important; }
+  .rbc-time-header-content { border-color: #e0d5c5 !important; }
   .rbc-current-time-indicator { background: #c9a96e; }
   .rbc-show-more { color: #c9a96e; background: transparent; font-size: 12px; }
-  .rbc-agenda-table { border-color: #3a2e24; }
-  .rbc-agenda-table td, .rbc-agenda-table th { border-color: #3a2e24 !important; color: #e8d5b7; }
-  .rbc-agenda-date-cell, .rbc-agenda-time-cell { color: #a0896a; }
+  .rbc-agenda-table { border-color: #e0d5c5; }
+  .rbc-agenda-table td, .rbc-agenda-table th { border-color: #e0d5c5 !important; color: #1a1410; }
+  .rbc-agenda-date-cell, .rbc-agenda-time-cell { color: #7a6a58; }
+  .rbc-time-gutter .rbc-label { color: #7a6a58; }
 `;
 
 function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {

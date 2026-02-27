@@ -1,12 +1,12 @@
 // Colores y estilos globales del tema DermaClinic
 export const C = {
-  bg: "#0f0c09",
-  surface: "#1a1410",
-  border: "#3a2e24",
+  bg: "#ffffff",
+  surface: "#f5f0ea",
+  border: "#e0d5c5",
   gold: "#c9a96e",
   goldLight: "#a0896a",
-  text: "#e8d5b7",
-  muted: "#666",
+  text: "#1a1410",
+  muted: "#7a6a58",
   danger: "#e05a5a",
   success: "#5a9e6f",
 };
