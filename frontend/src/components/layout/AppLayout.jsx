@@ -170,6 +170,7 @@ export function AppLayout() {
     >
       <style>{`
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        body { font-size: 15px; font-weight: 500; }
         input:focus, select:focus, textarea:focus { border-color: ${C.gold} !important; }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }

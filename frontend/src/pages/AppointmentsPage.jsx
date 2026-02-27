@@ -13,6 +13,12 @@ import { C, TRATAMIENTOS } from "../utils/theme";
 moment.locale("es");
 const localizer = momentLocalizer(moment);
 
+function toLocalISO(d) {
+  const date = new Date(d);
+  const pad = n => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 const ESTADO_COLORS = {
   pendiente: "#c9a96e",
   confirmada: "#5a9e6f",
@@ -23,37 +29,37 @@ const ESTADOS = ["pendiente", "confirmada", "cancelada"];
 
 const calendarStyles = `
   .rbc-calendar { background: transparent; color: #1a1410; font-family: 'DM Sans', sans-serif; }
-  .rbc-header { background: #f5f0ea; border-color: #e0d5c5 !important; color: #7a6a58; padding: 10px 4px; font-size: 13px; font-weight: 600; }
+  .rbc-header { background: #f5f0ea; border-color: #e0d5c5 !important; color: #7a6a58; padding: 10px 4px; font-size: 14px; font-weight: 600; }
   .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #e0d5c5 !important; }
   .rbc-day-bg { border-color: #e0d5c5 !important; }
   .rbc-day-bg.rbc-today { background: transparent; }
   .rbc-off-range-bg { background: #f0ebe3; }
-  .rbc-date-cell { color: #7a6a58; font-size: 13px; padding: 4px 6px; }
+  .rbc-date-cell { color: #7a6a58; font-size: 14px; padding: 4px 6px; }
   .rbc-date-cell.rbc-now { color: #1a1410; font-weight: 700; text-decoration: underline; }
   .rbc-toolbar { margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
-  .rbc-toolbar button { background: #f5f0ea; border: 1px solid #e0d5c5; color: #7a6a58; padding: 7px 14px; border-radius: 8px; font-family: inherit; cursor: pointer; font-size: 13px; }
+  .rbc-toolbar button { background: #f5f0ea; border: 1px solid #e0d5c5; color: #7a6a58; padding: 7px 14px; border-radius: 8px; font-family: inherit; cursor: pointer; font-size: 14px; }
   .rbc-toolbar button:hover { border-color: #c9a96e; color: #c9a96e; }
   .rbc-toolbar button.rbc-active { background: rgba(201,169,110,0.15); border-color: #c9a96e; color: #c9a96e; }
-  .rbc-toolbar-label { color: #c9a96e; font-weight: 700; font-family: serif; font-size: 18px; }
-  .rbc-event { border-radius: 6px !important; border: none !important; font-size: 12px; padding: 2px 6px; }
-  .rbc-event-label { font-size: 11px; }
+  .rbc-toolbar-label { color: #c9a96e; font-weight: 700; font-family: serif; font-size: 20px; }
+  .rbc-event { border-radius: 6px !important; border: none !important; font-size: 13px; padding: 3px 8px; }
+  .rbc-event-label { font-size: 12px; }
   .rbc-time-slot { border-color: #e0d5c5 !important; }
   .rbc-timeslot-group { border-color: #e0d5c5 !important; }
   .rbc-time-content { border-color: #e0d5c5 !important; }
   .rbc-time-header-content { border-color: #e0d5c5 !important; }
   .rbc-current-time-indicator { background: #c9a96e; }
-  .rbc-show-more { color: #c9a96e; background: transparent; font-size: 12px; }
+  .rbc-show-more { color: #c9a96e; background: transparent; font-size: 13px; }
   .rbc-agenda-table { border-color: #e0d5c5; }
   .rbc-agenda-table td, .rbc-agenda-table th { border-color: #e0d5c5 !important; color: #1a1410; }
   .rbc-agenda-date-cell, .rbc-agenda-time-cell { color: #7a6a58; }
-  .rbc-time-gutter .rbc-label { color: #7a6a58; }
+  .rbc-time-gutter .rbc-label { color: #7a6a58; font-size: 13px; }
 `;
 
 function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {
   const today = new Date();
   const defaultDate = appointment?.fecha_hora
-    ? new Date(appointment.fecha_hora).toISOString().slice(0, 16)
-    : `${today.toISOString().slice(0, 10)}T09:00`;
+    ? toLocalISO(new Date(appointment.fecha_hora))
+    : `${toLocalISO(today).slice(0, 10)}T09:00`;
 
   const [form, setForm] = useState({
     paciente_id: appointment?.paciente_id || "",
@@ -246,13 +252,14 @@ export default function AppointmentsPage() {
 
   const saveAppointment = async (form) => {
     setActionLoading(true);
+    const formToSend = { ...form, fecha_hora: new Date(form.fecha_hora).toISOString() };
     try {
       if (modal === "new") {
-        const newApt = await api.createAppointment(form);
+        const newApt = await api.createAppointment(formToSend);
         setAppointments((prev) => [...prev, newApt]);
         showToast("Cita creada correctamente");
       } else {
-        const updated = await api.updateAppointment(selectedApt.id, form);
+        const updated = await api.updateAppointment(selectedApt.id, formToSend);
         setAppointments((prev) => prev.map((a) => (a.id === selectedApt.id ? updated : a)));
         showToast("Cita actualizada");
       }
@@ -363,6 +370,8 @@ export default function AppointmentsPage() {
           date={currentDate}
           onNavigate={setCurrentDate}
           defaultView={Views.WEEK}
+          min={new Date(2000, 0, 1, 6, 0, 0)}
+          max={new Date(2000, 0, 1, 22, 0, 0)}
           eventPropGetter={eventStyleGetter}
           messages={{
             today: "Hoy",
@@ -389,7 +398,7 @@ export default function AppointmentsPage() {
           wide
         >
           <AppointmentForm
-            appointment={modal === "edit" ? selectedApt : selectedSlot ? { fecha_hora: selectedSlot.toISOString().slice(0, 16) } : null}
+            appointment={modal === "edit" ? selectedApt : selectedSlot ? { fecha_hora: toLocalISO(selectedSlot) } : null}
             pacientes={pacientes}
             onSave={saveAppointment}
             onClose={() => { setModal(null); setSelectedApt(null); }}
