@@ -741,7 +741,7 @@ export default function App() {
             <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚕</div>
             <div>
               <div style={{ color: C.gold, fontWeight: 700, fontSize: 17, fontFamily: "serif", letterSpacing: 0.5 }}>DermaClinic</div>
-              <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>Sistema de Gestión · Red Local</div>
+              <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>Sistema de Gestión</div>
             </div>
             <div style={{ flex: 1 }} />
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -831,7 +831,7 @@ export default function App() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: C.text, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nombre}</div>
                           <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>DNI: {p.dni}{p.fecha_nacimiento ? ` · ${calcAge(p.fecha_nacimiento)} años` : ""}</div>
-                          <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>{p.total_sesiones} sesión{p.total_sesiones !== 1 ? "es" : ""}</div>
+                          <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>{p.total_sesiones} {p.total_sesiones > 1 ? "sesiones" : "sesión"}</div>
                         </div>
                         <Btn variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); deletePatient(p.id); }} style={{ padding: "5px 10px" }}>🗑</Btn>
                       </div>
