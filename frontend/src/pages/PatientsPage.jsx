@@ -547,9 +547,8 @@ export default function PatientsPage() {
               >
                 {[
                   ["Nombre", editingUser.nombre],
-                  ["Nombre de Usuario", editingUser.username],
+                  ["Usuario", editingUser.username],
                   ["Rol", editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"],
-                  ["Estado", editingUser.is_active ? "✅ Activo" : "❌ Inactivo"],
                 ].map(([k, v]) => (
                   <div key={k}>
                     <div

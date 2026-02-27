@@ -187,10 +187,9 @@ router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req,
     }
 
     const user = await db.queryOne(`
-      UPDATE users
-      SET is_active = false, updated_at = NOW()
+      DELETE FROM users
       WHERE id = $1
-      RETURNING id, email, nombre, is_active
+      RETURNING id, email, nombre
     `, [id]);
 
     if (!user) {
@@ -200,7 +199,7 @@ router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req,
     }
 
     res.json({
-      message: 'Usuario desactivado exitosamente',
+      message: 'Usuario eliminado exitosamente',
       user,
     });
   } catch (error) {
@@ -208,32 +207,5 @@ router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req,
   }
 });
 
-// Reactivar usuario (solo admin)
-router.patch('/:id/activate', cloudOnly, authenticate, requireRole('admin'), async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const db = getDb();
-
-    const user = await db.queryOne(`
-      UPDATE users
-      SET is_active = true, updated_at = NOW()
-      WHERE id = $1
-      RETURNING id, email, nombre, is_active
-    `, [id]);
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'Usuario no encontrado',
-      });
-    }
-
-    res.json({
-      message: 'Usuario reactivado exitosamente',
-      user,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
 
 module.exports = router;
