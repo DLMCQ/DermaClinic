@@ -16,5 +16,8 @@ echo "📦 Installing backend dependencies..."
 cd ../backend
 npm install
 
+echo "🌱 Creating demo user..."
+node src/seed.js
+
 echo "✅ Starting server..."
 npm start
