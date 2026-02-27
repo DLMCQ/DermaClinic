@@ -133,7 +133,7 @@ export function AppLayout() {
             textOverflow: "ellipsis",
           }}
         >
-          {user?.nombre || user?.email}
+          {user?.nombre || user?.username}
         </div>
         <button
           onClick={handleLogout}

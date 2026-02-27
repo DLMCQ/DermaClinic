@@ -86,7 +86,7 @@ async function request(method, path, body) {
 
 export const api = {
   // Autenticación
-  login: (email, password) => request("POST", "/auth/login", { email, password }),
+  login: (username, password) => request("POST", "/auth/login", { username, password }),
   logout: () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
