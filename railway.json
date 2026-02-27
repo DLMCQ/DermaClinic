@@ -4,7 +4,7 @@
     "watchPaths": ["backend/**", "frontend/**"]
   },
   "deploy": {
-    "startCommand": "cd backend && npm start",
+    "startCommand": "bash start.sh",
     "restartPolicyType": "on_failure",
     "restartPolicyMaxRetries": 5
   }
