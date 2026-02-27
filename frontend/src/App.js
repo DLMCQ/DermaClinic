@@ -38,6 +38,16 @@ function toBase64(file) {
   });
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 // ─── PDF Generator ─────────────────────────────────────────────────────────────
 function generatePDF(patient) {
   const sesiones = [...patient.sesiones]
@@ -557,6 +567,8 @@ export default function App() {
   const [usuarios, setUsuarios] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const searchTimeout = useRef();
+  const isMobile = useIsMobile();
+  const [mobileView, setMobileView] = useState("list"); // "list" | "detail"
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -612,6 +624,7 @@ export default function App() {
     try {
       const data = await api.getPaciente(p.id);
       setSelected(data);
+      if (isMobile) setMobileView("detail");
     } catch (e) {
       showToast("Error al cargar ficha: " + e.message, "error");
     }
@@ -747,31 +760,36 @@ export default function App() {
       ) : (
         <>
           {/* Header */}
-          <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "0 28px", display: "flex", alignItems: "center", height: 66, gap: 20 }}>
-            <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚕</div>
+          <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: isMobile ? "0 14px" : "0 28px", display: "flex", alignItems: "center", height: 60, gap: isMobile ? 10 : 20 }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>⚕</div>
             <div>
-              <div style={{ color: C.gold, fontWeight: 700, fontSize: 17, fontFamily: "serif", letterSpacing: 0.5 }}>DermaClinic</div>
-              <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>Sistema de Gestión</div>
+              <div style={{ color: C.gold, fontWeight: 700, fontSize: isMobile ? 15 : 17, fontFamily: "serif", letterSpacing: 0.5 }}>DermaClinic</div>
+              {!isMobile && <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>Sistema de Gestión</div>}
             </div>
             <div style={{ flex: 1 }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.success }} />
-                <span style={{ color: C.muted, fontSize: 12 }}>Servidor activo</span>
-              </div>
-              <div style={{ height: 20, width: 1, background: C.border }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>{user.email || "Usuario"}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
+              {!isMobile && (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.success }} />
+                    <span style={{ color: C.muted, fontSize: 12 }}>Servidor activo</span>
+                  </div>
+                  <div style={{ height: 20, width: 1, background: C.border }} />
+                </>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
+                {!isMobile && <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>{user.email || "Usuario"}</span>}
                 {user.role === "admin" && (
                   <>
-                    <div style={{ height: 16, width: 1, background: C.border }} />
+                    {!isMobile && <div style={{ height: 16, width: 1, background: C.border }} />}
                     <Btn
                       variant="ghost"
                       size="sm"
-                      onClick={() => setAdminTab(adminTab === "pacientes" ? "usuarios" : "pacientes")}
+                      onClick={() => { setAdminTab(adminTab === "pacientes" ? "usuarios" : "pacientes"); setMobileView("list"); setSelected(null); }}
                       style={{ padding: "5px 10px" }}
                     >
-                      {adminTab === "usuarios" ? "👥 Usuarios" : "👤 Gestión"}
+                      {adminTab === "usuarios" ? "👥" : "👤"}
+                      {!isMobile && (adminTab === "usuarios" ? " Usuarios" : " Gestión")}
                     </Btn>
                   </>
                 )}
@@ -784,16 +802,16 @@ export default function App() {
                   }}
                   style={{ padding: "5px 10px" }}
                 >
-                  Cerrar sesión
+                  {isMobile ? "↩" : "Cerrar sesión"}
                 </Btn>
               </div>
             </div>
           </div>
 
       {/* Layout */}
-      <div style={{ display: "flex", height: "calc(100vh - 66px)" }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "auto" : "calc(100vh - 60px)", minHeight: isMobile ? "calc(100vh - 60px)" : "auto" }}>
         {/* Sidebar */}
-        <div style={{ width: 340, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", background: "#120f0b", flexShrink: 0 }}>
+        <div style={{ width: isMobile ? "100%" : 340, borderRight: isMobile ? "none" : `1px solid ${C.border}`, borderBottom: isMobile && mobileView === "list" ? `1px solid ${C.border}` : "none", display: isMobile && mobileView === "detail" ? "none" : "flex", flexDirection: "column", background: "#120f0b", flexShrink: 0 }}>
           <div style={{ padding: "18px 16px 14px" }}>
             {adminTab === "pacientes" ? (
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -857,7 +875,7 @@ export default function App() {
                   : usuarios.map((u) => (
                     <div
                       key={u.id}
-                      onClick={() => setEditingUser(u)}
+                      onClick={() => { setEditingUser(u); if (isMobile) setMobileView("detail"); }}
                       style={{
                         background: editingUser?.id === u.id ? "rgba(201,169,110,0.1)" : C.surface,
                         border: `1px solid ${editingUser?.id === u.id ? C.gold : C.border}`,
@@ -883,7 +901,15 @@ export default function App() {
         </div>
 
         {/* Detail */}
-        <div style={{ flex: 1, overflowY: "auto", padding: 28 }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 14 : 28, display: isMobile && mobileView === "list" ? "none" : "block" }}>
+          {isMobile && (mobileView === "detail" || adminTab === "usuarios") && (
+            <button
+              onClick={() => { setMobileView("list"); }}
+              style={{ background: "none", border: "none", color: C.gold, fontSize: 14, cursor: "pointer", marginBottom: 16, padding: "6px 0", fontFamily: "inherit", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}
+            >
+              ← Volver a la lista
+            </button>
+          )}
           {adminTab === "usuarios" &&  editingUser && (
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28 }}>
               <h2 style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "serif" }}>Detalles del Usuario</h2>
@@ -916,12 +942,12 @@ export default function App() {
           {adminTab === "pacientes" && selected && (
             <>
               {/* Ficha paciente */}
-              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28, marginBottom: 22 }}>
-                <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-                  <Avatar url={selected.foto_url} name={selected.nombre} size={100} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
-                      <h1 style={{ margin: 0, fontSize: 26, color: C.text, fontWeight: 700, fontFamily: "serif" }}>{selected.nombre}</h1>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: isMobile ? 16 : 28, marginBottom: 22 }}>
+                <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 14 : 24, alignItems: isMobile ? "center" : "flex-start" }}>
+                  <Avatar url={selected.foto_url} name={selected.nombre} size={isMobile ? 80 : 100} />
+                  <div style={{ flex: 1, width: isMobile ? "100%" : "auto" }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 10, justifyContent: isMobile ? "center" : "flex-start" }}>
+                      <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 26, color: C.text, fontWeight: 700, fontFamily: "serif", textAlign: isMobile ? "center" : "left" }}>{selected.nombre}</h1>
                       {calcAge(selected.fecha_nacimiento) && (
                         <span style={{ background: "rgba(201,169,110,0.15)", color: C.gold, fontSize: 12, padding: "3px 12px", borderRadius: 20, fontWeight: 600 }}>
                           {calcAge(selected.fecha_nacimiento)} años
@@ -947,16 +973,16 @@ export default function App() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 9, flexShrink: 0 }}>
-                    <Btn variant="ghost" size="sm" onClick={() => setModal("editPatient")}>✏️ Editar ficha</Btn>
-                    <Btn variant="success" size="sm" onClick={() => generatePDF(selected)}>📄 Exportar PDF</Btn>
+                  <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: 9, flexShrink: 0, justifyContent: isMobile ? "center" : "flex-start" }}>
+                    <Btn variant="ghost" size="sm" onClick={() => setModal("editPatient")}>✏️ Editar</Btn>
+                    <Btn variant="success" size="sm" onClick={() => generatePDF(selected)}>📄 PDF</Btn>
                   </div>
                 </div>
               </div>
 
               {/* Sesiones */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-                <h2 style={{ margin: 0, color: C.gold, fontSize: 19, fontFamily: "serif" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+                <h2 style={{ margin: 0, color: C.gold, fontSize: isMobile ? 16 : 19, fontFamily: "serif" }}>
                   Historial de sesiones <span style={{ color: C.muted, fontWeight: 400, fontSize: 14 }}>({selected.sesiones?.length || 0})</span>
                 </h2>
                 <Btn onClick={() => setModal("newSession")}>+ Nueva sesión</Btn>
