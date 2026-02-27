@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 export function ProtectedRoute({ children, allowedRoles }) {
@@ -10,5 +10,5 @@ export function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return children;
+  return children ?? <Outlet />;
 }
