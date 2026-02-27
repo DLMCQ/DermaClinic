@@ -17,6 +17,7 @@ const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: "📊" },
   { to: "/pacientes", label: "Pacientes", icon: "🌸" },
   { to: "/citas", label: "Citas", icon: "📅" },
+  ...(user?.role === "admin" ? [{ to: "/usuarios", label: "👥 Usuarios" }] : []),
 ];
 
 export function AppLayout() {
