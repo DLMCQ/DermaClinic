@@ -15,7 +15,7 @@ const TRATAMIENTOS = [
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 function formatDate(s) {
   if (!s) return "";
-  const [y, m, d] = s.split("-");
+  const [y, m, d] = s.slice(0, 10).split("-");
   return `${d}/${m}/${y}`;
 }
 
