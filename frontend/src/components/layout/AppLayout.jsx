@@ -42,14 +42,14 @@ export function AppLayout() {
     background: isActive ? "rgba(201,169,110,0.1)" : "transparent",
     borderLeft: isActive ? `3px solid ${C.gold}` : "3px solid transparent",
     fontWeight: isActive ? 600 : 500,
-    fontSize: 16,
+    fontSize: 17,
     transition: "all 0.15s",
   });
 
   const sidebarContent = (
     <div
       style={{
-        width: 240,
+        width: 260,
         background: C.surface,
         borderRight: `1px solid ${C.border}`,
         display: "flex",
@@ -70,14 +70,14 @@ export function AppLayout() {
       >
         <div
           style={{
-            width: 42,
-            height: 42,
+            width: 48,
+            height: 48,
             borderRadius: "50%",
             background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 22,
+            fontSize: 26,
             flexShrink: 0,
           }}
         >
@@ -88,13 +88,13 @@ export function AppLayout() {
             style={{
               color: C.gold,
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: 20,
               fontFamily: "serif",
             }}
           >
             DermaClinic
           </div>
-          <div style={{ color: C.muted, fontSize: 12 }}>Sistema de Gestión</div>
+          <div style={{ color: C.muted, fontSize: 13 }}>Sistema de Gestión</div>
         </div>
       </div>
 
@@ -107,7 +107,7 @@ export function AppLayout() {
             style={navLinkStyle}
             onClick={() => isMobile && setSidebarOpen(false)}
           >
-            <span style={{ fontSize: 20 }}>{item.icon}</span>
+            <span style={{ fontSize: 22 }}>{item.icon}</span>
             {item.label}
           </NavLink>
         ))}
@@ -120,13 +120,13 @@ export function AppLayout() {
           borderTop: `1px solid ${C.border}`,
         }}
       >
-        <div style={{ color: C.muted, fontSize: 13, marginBottom: 4 }}>
+        <div style={{ color: C.muted, fontSize: 14, marginBottom: 4 }}>
           {user?.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}
         </div>
         <div
           style={{
             color: C.goldLight,
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: 500,
             marginBottom: 12,
             whiteSpace: "nowrap",
@@ -145,7 +145,7 @@ export function AppLayout() {
             borderRadius: 8,
             color: C.muted,
             padding: "7px 12px",
-            fontSize: 15,
+            fontSize: 16,
             cursor: "pointer",
             fontFamily: "inherit",
             textAlign: "left",
@@ -170,7 +170,7 @@ export function AppLayout() {
     >
       <style>{`
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        body { font-size: 16px; font-weight: 500; }
+        body { font-size: 17px; font-weight: 500; }
         input:focus, select:focus, textarea:focus { border-color: ${C.gold} !important; }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }
