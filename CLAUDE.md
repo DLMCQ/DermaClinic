@@ -4,13 +4,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DermaClinic is a local network medical records management system for a dermatology clinic. It's a full-stack web application designed to run on a LAN server, accessible from multiple client devices on the same network.
+DermaClinic is a medical records management system for a dermatology clinic. It's a full-stack web application with **dual-mode architecture** supporting both local network deployment and cloud deployment.
 
 **Key characteristics:**
 - Monorepo structure with separate backend and frontend folders
-- Single-PC server architecture (no cloud deployment)
+- **Dual-mode**: Local (sql.js) or Cloud (PostgreSQL on Railway)
 - Spanish language UI and messaging
+- JWT authentication for cloud mode
 - Designed for Windows primary users with batch file launchers
+
+## 🆕 Dual-Mode Architecture
+
+The system evolved from local-only to support both local network and cloud deployment.
+
+### Local Mode (`DATABASE_MODE=local`)
+- Uses sql.js (in-memory SQLite)
+- No authentication required (backward compatible)
+- Runs on local network (`0.0.0.0:3001`)
+- Data in `backend/data/dermaclinic.db`
+- Images as base64 in database
+
+### Cloud Mode (`DATABASE_MODE=cloud`)
+- Uses PostgreSQL (Railway)
+- JWT authentication required
+- Runs on cloud platform
+- Images in Railway Volumes
+- Automated backups
+
+**Switch modes by changing `.env`:**
+```bash
+# Local mode
+DATABASE_MODE=local
+
+# Cloud mode
+DATABASE_MODE=cloud
+DATABASE_URL=postgresql://...
+```
+
+### Implementation Status
+
+**✅ Fase 1 - Fundamentos (COMPLETED):**
+- Dual-mode configuration system
+- Database adapter pattern (sqlite + postgres)
+- JWT authentication (access + refresh tokens)
+- RBAC middleware (admin/doctor roles)
+- PostgreSQL migrations (initial schema, users, appointments)
+- Auth endpoints (login, logout, refresh, me)
+- Backward compatibility with local mode
+
+**📋 Pending Phases:**
+- Fase 2: Cloud Dashboard (estadísticas, métricas, búsquedas avanzadas)
+- Fase 3: Calendario de Citas (integración con appointments table)
+- Fase 4: Responsive Design (mobile-first UI)
+- Fase 5: Backup Automatizado (Railway cron jobs)
+- Fase 6: Gestión de Imágenes (Railway Volumes, upload directo)
+- Fase 7: Testing & Deploy (Railway setup, migration guide)
+
+**📖 Detailed Plan:**
+The complete implementation plan is saved at `~/.claude/plans/sassy-squishing-locket.md` (31KB, 1133 lines)
 
 ## Development Commands
 
@@ -46,15 +97,41 @@ On Windows, use `INSTALAR_Y_ARRANCAR.bat` for first-time setup or `ARRANCAR_SERV
 ### Data Flow
 1. **Frontend** (React SPA) makes requests to `/api/*` endpoints
 2. **Backend** (Express) serves both the API and the built frontend static files
-3. **Database** (sql.js) stores data in a single file at `backend/data/dermaclinic.db`
+3. **Database** (dual-mode):
+   - **Local**: sql.js stores data in `backend/data/dermaclinic.db`
+   - **Cloud**: PostgreSQL on Railway
 
 ### Backend Structure
-- **server.js**: Express app initialization, serves compiled frontend from `../../frontend/build`, binds to `0.0.0.0:3001`
-- **database.js**: In-memory SQLite wrapper using sql.js, exports `initDb()`, `all()`, `get()`, `run()` helper functions. Every mutation calls `saveDb()` to persist to disk.
-- **routes/pacientes.js**: Patient CRUD endpoints (GET, POST, PUT, DELETE), includes search via query param `?q=`
+
+**Core:**
+- **server.js**: Express app initialization, serves compiled frontend, binds to `0.0.0.0:3001`
+- **config/index.js**: Centralized configuration (NEW in Fase 1)
+
+**Database Layer (NEW in Fase 1):**
+- **database/index.js**: Factory pattern - returns correct adapter based on `DATABASE_MODE`
+- **database/sqliteAdapter.js**: Wraps sql.js for local mode
+- **database/postgresAdapter.js**: Wraps pg for cloud mode
+- **migrations/*.sql**: PostgreSQL migration files
+
+**Authentication (NEW in Fase 1):**
+- **utils/jwt.js**: JWT token generation and verification
+- **utils/password.js**: Bcrypt password hashing
+- **middleware/auth.js**: JWT authentication middleware
+- **middleware/roleCheck.js**: Role-based authorization (admin/doctor)
+
+**Routes:**
+- **routes/auth.js**: Login, logout, refresh, me endpoints (NEW)
+- **routes/pacientes.js**: Patient CRUD endpoints
 - **routes/sesiones.js**: Treatment session CRUD endpoints
 
-**Critical database detail**: This uses `sql.js`, NOT `better-sqlite3` despite what README might suggest. The database is loaded entirely into memory, and changes are persisted to disk via `fs.writeFileSync` after each mutation.
+**Database Adapter Interface:**
+```javascript
+// All adapters implement:
+await db.query(sql, params)      // Returns array of rows
+await db.queryOne(sql, params)   // Returns single row or null
+await db.execute(sql, params)    // Execute without return
+await db.transaction(callback)   // Transaction wrapper
+```
 
 ### Frontend Structure
 - **App.js**: Single-file React application (~666 lines)
@@ -67,11 +144,13 @@ On Windows, use `INSTALAR_Y_ARRANCAR.bat` for first-time setup or `ARRANCAR_SERV
 - **index.js**: React entry point
 
 ### Database Schema
+
 **pacientes** table:
 - id (TEXT PRIMARY KEY, UUID)
 - nombre, dni (unique), fecha_nacimiento, telefono, email, direccion
 - obra_social, nro_afiliado, motivo_consulta
-- foto_url (base64 image data)
+- foto_url (base64 image data - legacy)
+- foto_path (file path - cloud mode)
 - creado_en, actualizado_en
 
 **sesiones** table:
@@ -81,16 +160,55 @@ On Windows, use `INSTALAR_Y_ARRANCAR.bat` for first-time setup or `ARRANCAR_SERV
 - imagen_antes, imagen_despues (base64 image data)
 - creado_en
 
+**users** table (cloud mode only):
+- id (SERIAL PRIMARY KEY)
+- email (UNIQUE, NOT NULL)
+- password_hash (NOT NULL)
+- nombre (NOT NULL)
+- role (admin | doctor)
+- is_active (BOOLEAN, default true)
+- created_at, updated_at
+
+**refresh_tokens** table (cloud mode only):
+- id (SERIAL PRIMARY KEY)
+- token (TEXT UNIQUE, NOT NULL)
+- user_id (FOREIGN KEY → users.id)
+- expires_at (TIMESTAMPTZ)
+- created_at
+
+**appointments** table (cloud mode, Fase 3):
+- id (SERIAL PRIMARY KEY)
+- paciente_id (FOREIGN KEY → pacientes.id)
+- doctor_id (FOREIGN KEY → users.id)
+- fecha_hora (TIMESTAMPTZ)
+- duracion_minutos (INTEGER, default 30)
+- estado (pendiente | confirmada | cancelada | completada)
+- notas (TEXT)
+- recordatorio_enviado (BOOLEAN, default false)
+- created_at, updated_at
+
 ### API Endpoints
-- `GET /api/pacientes?q=search` - List/search patients (returns patient with `total_sesiones` count)
+
+**Authentication (NEW - cloud mode only):**
+- `POST /api/auth/login` - Login with email/password, returns tokens
+- `POST /api/auth/refresh` - Refresh access token with refresh token
+- `POST /api/auth/logout` - Logout (invalidate refresh token)
+- `GET /api/auth/me` - Get current authenticated user
+
+**Patients:**
+- `GET /api/pacientes?q=search` - List/search patients
 - `GET /api/pacientes/:id` - Get patient with sessions array
-- `POST /api/pacientes` - Create patient
-- `PUT /api/pacientes/:id` - Update patient
-- `DELETE /api/pacientes/:id` - Delete patient and cascade delete sessions
+- `POST /api/pacientes` - Create patient (requires auth in cloud mode)
+- `PUT /api/pacientes/:id` - Update patient (requires auth in cloud mode)
+- `DELETE /api/pacientes/:id` - Delete patient (requires auth in cloud mode)
+
+**Sessions:**
 - `POST /api/sesiones` - Create session (requires paciente_id, fecha, tratamiento)
 - `PUT /api/sesiones/:id` - Update session
 - `DELETE /api/sesiones/:id` - Delete session
-- `GET /api/health` - Health check endpoint
+
+**Health:**
+- `GET /api/health` - Health check endpoint (returns mode, env, status)
 
 ### Image Handling
 Images (patient photos, before/after treatment photos) are stored as base64-encoded data URLs directly in the database. Max size: 5MB per image (enforced in frontend). This design choice avoids file system management but increases database size.
@@ -116,14 +234,52 @@ All UI text, error messages, comments, and variable names related to domain conc
 ## Common Workflows
 
 ### Adding a new patient field
-1. Update database schema in `backend/src/database.js` (add column to CREATE TABLE)
-2. Add field to POST/PUT routes in `backend/src/routes/pacientes.js`
-3. Add form input in `PatientForm` component in `frontend/src/App.js`
-4. Add display field in patient detail view
-5. Add to PDF export template in `generatePDF()` function
+**For local mode:**
+1. Update schema in `backend/src/database/sqliteAdapter.js` (CREATE TABLE)
+2. Add field to routes in `backend/src/routes/pacientes.js`
+
+**For cloud mode (also do the above, plus):**
+3. Create new migration file in `backend/src/migrations/`
+4. Add field to PostgreSQL schema with ALTER TABLE
+
+**For both:**
+5. Add form input in `PatientForm` component in `frontend/src/App.js`
+6. Add display field in patient detail view
+7. Add to PDF export template in `generatePDF()` function
 
 ### Adding a new treatment type
 Update the `TRATAMIENTOS` array constant at the top of `frontend/src/App.js`.
+
+### Running in local mode vs cloud mode
+**Local mode (development/local network):**
+```bash
+# Set in backend/.env
+DATABASE_MODE=local
+LOCAL_DB_PATH=../data/dermaclinic.db
+
+cd backend && npm start
+```
+
+**Cloud mode (Railway deployment):**
+```bash
+# Set in Railway environment variables
+DATABASE_MODE=cloud
+DATABASE_URL=postgresql://...
+JWT_ACCESS_SECRET=<64-char-secret>
+JWT_REFRESH_SECRET=<64-char-secret>
+```
+
+### Creating a new user (cloud mode only)
+Users can only be created by admins through the API:
+```bash
+POST /api/users
+{
+  "email": "doctor@dermaclinic.com",
+  "password": "SecurePassword123!",
+  "nombre": "Dr. García",
+  "role": "doctor"  # or "admin"
+}
+```
 
 ### Debugging production issues
 Since this runs on-site, check:
@@ -142,4 +298,86 @@ This project has no automated tests. Manual testing workflow:
 6. Test from another device on the network before deployment
 
 ## Backup and Data
+
+**Local Mode:**
 The entire application state is in `backend/data/dermaclinic.db`. This file should be backed up regularly. There's no automated backup system - users manually copy the file.
+
+**Cloud Mode:**
+- PostgreSQL data backed up by Railway (automated daily snapshots)
+- Images stored in Railway Volumes (persistent storage)
+- Manual exports via pg_dump can be configured
+
+## Railway Deployment (Cloud Mode)
+
+### Prerequisites
+1. Railway account with PostgreSQL addon
+2. Environment variables configured:
+   - `DATABASE_MODE=cloud`
+   - `DATABASE_URL` (provided by Railway PostgreSQL)
+   - `JWT_ACCESS_SECRET` (64-char random string)
+   - `JWT_REFRESH_SECRET` (64-char random string)
+   - `NODE_ENV=production`
+   - `CORS_ORIGIN` (frontend domain)
+
+### Deployment Steps
+1. Create Railway project
+2. Add PostgreSQL service
+3. Deploy backend service from `/backend` directory
+4. Set environment variables in Railway dashboard
+5. Migrations run automatically on first connect
+6. Create initial admin user via direct database access
+
+### Migration from Local to Cloud
+
+**Option 1: Fresh Start**
+- Deploy cloud instance with new database
+- Create users manually
+- Re-enter patient data or migrate via CSV
+
+**Option 2: Data Migration** (requires custom script)
+1. Export local SQLite data to JSON
+2. Transform data format (base64 → file uploads)
+3. Import into PostgreSQL via batch insert
+4. Create user accounts for existing clinic staff
+
+## Security Notes
+
+**Local Mode:**
+- No authentication (trusted local network)
+- Firewall rules limit to LAN access only
+- Physical security of server machine
+
+**Cloud Mode:**
+- JWT authentication required
+- Passwords hashed with bcrypt (10 rounds)
+- HTTPS enforced via Railway
+- CORS configured for specific frontend origin
+- Refresh tokens stored in database (can be revoked)
+- Access tokens expire after 15 minutes
+
+## Environment Variables Reference
+
+```bash
+# Mode selection
+DATABASE_MODE=local|cloud
+
+# Server
+PORT=3001
+HOST=0.0.0.0
+NODE_ENV=development|production
+
+# Database (local mode)
+LOCAL_DB_PATH=../data/dermaclinic.db
+
+# Database (cloud mode)
+DATABASE_URL=postgresql://user:pass@host:port/db
+
+# JWT (cloud mode only)
+JWT_ACCESS_SECRET=<64-char-random-string>
+JWT_REFRESH_SECRET=<64-char-random-string>
+
+# CORS
+CORS_ORIGIN=*|http://specific-domain.com
+```
+
+See `backend/.env.example` for complete template.
