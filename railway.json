@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "watchPaths": ["backend/**", "frontend/**"]
+  },
+  "deploy": {
+    "startCommand": "bash start.sh",
+    "restartPolicyType": "on_failure",
+    "restartPolicyMaxRetries": 5
+  }
+}
