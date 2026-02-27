@@ -5,7 +5,7 @@ import { Btn } from "../components/common/Btn";
 import { C, inputStyle } from "../utils/theme";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { login, authLoading } = useAuth();
@@ -13,13 +13,13 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError("Email y contraseña requeridos");
+    if (!username.trim() || !password.trim()) {
+      setError("Usuario y contraseña requeridos");
       return;
     }
     setError("");
     try {
-      await login(email, password);
+      await login(username, password);
       navigate("/");
     } catch (err) {
       setError(err.message || "Error al iniciar sesión");
@@ -94,13 +94,13 @@ export default function LoginPage() {
                 textTransform: "uppercase",
               }}
             >
-              Email
+              Usuario
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="correo@ejemplo.com"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="nombre_usuario"
               disabled={authLoading}
               style={{ ...inputStyle, opacity: authLoading ? 0.5 : 1 }}
             />
@@ -170,7 +170,7 @@ export default function LoginPage() {
           <div style={{ fontWeight: 600, marginBottom: 6, color: C.gold }}>
             Credenciales de prueba:
           </div>
-          demo@dermaclinic.com / password
+          admin / password
         </div>
       </div>
     </div>

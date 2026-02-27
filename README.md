@@ -178,7 +178,7 @@ Copiá regularmente el archivo `dermaclinic.db` a un pendrive o carpeta comparti
 
 | Método | Ruta                              | Descripción                    | Modo   |
 |--------|-----------------------------------|--------------------------------|--------|
-| POST   | /api/auth/login                   | Login (email/password)         | Cloud  |
+| POST   | /api/auth/login                   | Login (username/password)      | Cloud  |
 | POST   | /api/auth/refresh                 | Renovar access token           | Cloud  |
 | POST   | /api/auth/logout                  | Cerrar sesión                  | Cloud  |
 | GET    | /api/auth/me                      | Usuario actual                 | Cloud  |

@@ -5,8 +5,8 @@ import { Input, Select } from "../common/FormFields";
 export function UserForm({ user, onSave, onClose, loading }) {
   const [form, setForm] = useState(
     user
-      ? { email: user.email || "", nombre: user.nombre || "", role: user.role || "doctor", password: "" }
-      : { email: "", nombre: "", role: "doctor", password: "" }
+      ? { username: user.username || "", nombre: user.nombre || "", role: user.role || "doctor", password: "" }
+      : { username: "", nombre: "", role: "doctor", password: "" }
   );
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -14,7 +14,7 @@ export function UserForm({ user, onSave, onClose, loading }) {
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-        <Input label="Email" value={form.email} onChange={set("email")} type="email" required />
+        <Input label="Usuario" value={form.username} onChange={set("username")} type="text" required />
         <Input label="Nombre completo" value={form.nombre} onChange={set("nombre")} required />
         <Select
           label="Rol"
@@ -39,8 +39,8 @@ export function UserForm({ user, onSave, onClose, loading }) {
         <Btn
           disabled={loading}
           onClick={() => {
-            if (!form.email.trim() || !form.nombre.trim()) {
-              alert("Email y nombre son obligatorios");
+            if (!form.username.trim() || !form.nombre.trim()) {
+              alert("Usuario y nombre son obligatorios");
               return;
             }
             if (!user && !form.password.trim()) {

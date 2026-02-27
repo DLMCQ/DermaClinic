@@ -15,10 +15,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (username, password) => {
     setAuthLoading(true);
     try {
-      const response = await api.login(email, password);
+      const response = await api.login(username, password);
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
       localStorage.setItem("user", JSON.stringify(response.user));
