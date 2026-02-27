@@ -1,4 +1,4 @@
-const BASE = process.env.REACT_APP_API_URL || "";
+const BASE = import.meta.env.VITE_API_URL || "";
 
 // Callback para cuando el token no se pueda renovar (será seteado por App.js)
 let onTokenExpired = null;
@@ -110,4 +110,19 @@ export const api = {
   createUsuario: (data) => request("POST", "/users", data),
   updateUsuario: (id, data) => request("PUT", `/users/${id}`, data),
   deleteUsuario: (id) => request("DELETE", `/users/${id}`),
+
+  // Dashboard
+  getDashboardStats: () => request("GET", "/dashboard/stats"),
+  getDashboardActivity: (limit = 10) => request("GET", `/dashboard/activity?limit=${limit}`),
+
+  // Citas (solo modo cloud)
+  getAppointments: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request("GET", `/appointments${q ? "?" + q : ""}`);
+  },
+  createAppointment: (data) => request("POST", "/appointments", data),
+  updateAppointment: (id, data) => request("PUT", `/appointments/${id}`, data),
+  deleteAppointment: (id) => request("DELETE", `/appointments/${id}`),
+  completeAppointment: (id) => request("PATCH", `/appointments/${id}/complete`),
+  cancelAppointment: (id) => request("PATCH", `/appointments/${id}/cancel`),
 };

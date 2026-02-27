@@ -12,7 +12,7 @@ frontend/build/
 dist/
 
 # Database files (keep in data/)
-backend/data/*.db
+data/*.db
 
 # Logs
 *.log

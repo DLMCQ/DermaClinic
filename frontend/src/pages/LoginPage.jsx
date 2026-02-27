@@ -46,7 +46,7 @@ export default function LoginPage() {
           padding: 48,
           maxWidth: 420,
           width: "100%",
-          boxShadow: "0 30px 100px rgba(0,0,0,0.9)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.12)",
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 36 }}>

@@ -26,7 +26,7 @@ export function Modal({ title, onClose, children, wide }) {
           maxWidth: "96vw",
           maxHeight: "92vh",
           overflowY: "auto",
-          boxShadow: "0 30px 100px rgba(0,0,0,0.9)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
         }}
       >
         <div
