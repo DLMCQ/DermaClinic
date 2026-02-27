@@ -3,11 +3,17 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const { initDb } = require("./database");
+const config = require("./config");
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS configuration
+app.use(cors({
+  origin: config.cors.origin,
+  credentials: config.cors.credentials,
+}));
+
+// Body parsing
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
@@ -17,12 +23,19 @@ if (fs.existsSync(FRONTEND_BUILD)) {
   app.use(express.static(FRONTEND_BUILD));
 }
 
-// Rutas API
+// API Routes
+const authRouter = require("./routes/auth");
 const pacientesRouter = require("./routes/pacientes");
 const sesionesRouter = require("./routes/sesiones");
+
+app.use("/api/auth", authRouter);
 app.use("/api/pacientes", pacientesRouter);
 app.use("/api/sesiones", sesionesRouter);
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+app.get("/api/health", (req, res) => res.json({
+  status: "ok",
+  mode: config.isLocal ? 'local' : 'cloud',
+  env: config.env,
+}));
 
 // Catchall React
 if (fs.existsSync(FRONTEND_BUILD)) {
@@ -31,14 +44,18 @@ if (fs.existsSync(FRONTEND_BUILD)) {
 
 // Iniciar DB y luego servidor
 initDb().then(() => {
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(config.server.port, config.server.host, () => {
     console.log("");
     console.log("================================================");
     console.log("   DermaClinic - Servidor Activo");
     console.log("================================================");
     console.log("");
-    console.log("Acceso local:   http://localhost:" + PORT);
-    console.log("Acceso en red:  http://[IP-DE-ESTA-PC]:" + PORT);
+    console.log(`Puerto:         ${config.server.port}`);
+    console.log(`Environment:    ${config.env}`);
+    console.log(`Database Mode:  ${config.isLocal ? 'LOCAL (sql.js)' : 'CLOUD (PostgreSQL)'}`);
+    console.log("");
+    console.log(`Acceso local:   http://localhost:${config.server.port}`);
+    console.log(`Acceso en red:  http://[IP-DE-ESTA-PC]:${config.server.port}`);
     console.log("");
     console.log("Para encontrar tu IP: ejecuta 'ipconfig' en CMD");
     console.log("Ctrl+C para detener el servidor");
