@@ -19,6 +19,7 @@ const generalLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
   skip: (req) => config.isLocal, // No rate limiting en modo local
+  trustProxy: 1, // Trust first proxy (Railway uses X-Forwarded-For)
 });
 
 // Rate limiting más estricto para login
@@ -31,6 +32,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => config.isLocal,
+  trustProxy: 1, // Trust first proxy (Railway uses X-Forwarded-For)
 });
 
 // Compression middleware
