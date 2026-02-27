@@ -3,14 +3,14 @@ const config = require('../config');
 
 /**
  * Generate access token (short-lived)
- * @param {Object} user - User object with id, email, role
+ * @param {Object} user - User object with id, username, role
  * @returns {string} JWT token
  */
 function generateAccessToken(user) {
   return jwt.sign(
     {
       userId: user.id,
-      email: user.email,
+      username: user.username,
       role: user.role,
     },
     config.jwt.accessSecret,
@@ -34,7 +34,7 @@ function generateRefreshToken(user) {
 /**
  * Verify access token
  * @param {string} token - JWT token
- * @returns {Object} Decoded payload { userId, email, role }
+ * @returns {Object} Decoded payload { userId, username, role }
  * @throws {Error} If token is invalid or expired
  */
 function verifyAccessToken(token) {

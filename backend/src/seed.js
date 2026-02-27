@@ -13,24 +13,24 @@ async function seed() {
 
     // Crear usuarios iniciales
     const users = [
-      { email: 'admin@dermaclinic.com', password: 'admin123', nombre: 'Administrador', role: 'admin' },
-      { email: 'demo@dermaclinic.com', password: 'password', nombre: 'Demo User', role: 'doctor' },
+      { username: 'admin', password: 'admin123', nombre: 'Administrador', role: 'admin' },
+      { username: 'demo', password: 'password', nombre: 'Demo User', role: 'doctor' },
     ];
 
     for (const userData of users) {
       const exists = await db.queryOne(
-        'SELECT * FROM users WHERE email = $1',
-        [userData.email]
+        'SELECT * FROM users WHERE username = $1',
+        [userData.username]
       );
 
       if (!exists) {
         const hashedPassword = await hashPassword(userData.password);
         await db.execute(
-          `INSERT INTO users (email, password_hash, nombre, role, is_active) 
+          `INSERT INTO users (username, password_hash, nombre, role, is_active) 
            VALUES ($1, $2, $3, $4, $5)`,
-          [userData.email, hashedPassword, userData.nombre, userData.role, true]
+          [userData.username, hashedPassword, userData.nombre, userData.role, true]
         );
-        console.log(`✅ Usuario creado: ${userData.email}`);
+        console.log(`✅ Usuario creado: ${userData.username}`);
       }
     }
     

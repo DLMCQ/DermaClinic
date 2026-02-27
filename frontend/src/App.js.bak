@@ -329,15 +329,15 @@ function SessionForm({ session, onSave, onClose, loading }) {
 // ─── Formulario Usuario ───────────────────────────────────────────────────────
 function UserForm({ user, onSave, onClose, loading }) {
   const [form, setForm] = useState(user ? {
-    email: user.email || "", nombre: user.nombre || "", role: user.role || "doctor", password: "",
-  } : { email: "", nombre: "", role: "doctor", password: "" });
+    username: user.username || "", nombre: user.nombre || "", role: user.role || "doctor", password: "",
+  } : { username: "", nombre: "", role: "doctor", password: "" });
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-        <Input label="Email" value={form.email} onChange={set("email")} type="email" required />
+        <Input label="Nombre de Usuario" value={form.username} onChange={set("username")} type="username" required />
         <Input label="Nombre completo" value={form.nombre} onChange={set("nombre")} required />
         <Select label="Rol" value={form.role} onChange={set("role")} options={["doctor", "admin"]} required />
         <Input label={user ? "Nueva contraseña (opcional)" : "Contraseña"} value={form.password} onChange={set("password")} type="password" placeholder={user ? "Dejar en blanco para no cambiar" : "••••••••"} required={!user} />
@@ -345,7 +345,7 @@ function UserForm({ user, onSave, onClose, loading }) {
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
         <Btn variant="ghost" onClick={onClose} disabled={loading}>Cancelar</Btn>
         <Btn disabled={loading} onClick={() => {
-          if (!form.email.trim() || !form.nombre.trim()) { alert("Email y nombre son obligatorios"); return; }
+          if (!form.username.trim() || !form.nombre.trim()) { alert("Nombre de Usuario y nombre son obligatorios"); return; }
           if (!user && !form.password.trim()) { alert("Contraseña requerida para nuevo usuario"); return; }
           onSave(form);
         }}>
@@ -358,15 +358,15 @@ function UserForm({ user, onSave, onClose, loading }) {
 
 // ─── Componente Login ──────────────────────────────────────────────────────────
 function LoginPage({ onLogin }) {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError("Email y contraseña requeridos");
+    if (!username.trim() || !password.trim()) {
+      setError("Nombre de Usuario y contraseña requeridos");
       return;
     }
 
@@ -374,7 +374,7 @@ function LoginPage({ onLogin }) {
     setError("");
 
     try {
-      const response = await api.login(email, password);
+      const response = await api.login(username, password);
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
       localStorage.setItem("user", JSON.stringify(response.user));
@@ -454,12 +454,12 @@ function LoginPage({ onLogin }) {
                 textTransform: "uppercase",
               }}
             >
-              Email
+              Nombre de Usuario
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="correo@ejemplo.com"
               disabled={loading}
               style={{
@@ -723,7 +723,7 @@ export default function App() {
         showToast("Usuario actualizado");
       } else {
         const newU = await api.createUsuario(form);
-        setUsuarios((us) => [newU, ...us].sort((a, b) => a.email.localeCompare(b.email)));
+        setUsuarios((us) => [newU, ...us].sort((a, b) => a.username.localeCompare(b.username)));
         showToast("Usuario creado correctamente");
       }
       setModal(null);
@@ -778,7 +778,7 @@ export default function App() {
                 </>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
-                {!isMobile && <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>{user.email || "Usuario"}</span>}
+                {!isMobile && <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>{user.username || "Usuario"}</span>}
                 {user.role === "admin" && (
                   <>
                     {!isMobile && <div style={{ height: 16, width: 1, background: C.border }} />}
@@ -888,7 +888,7 @@ export default function App() {
                       <Avatar name={u.nombre} size={48} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ color: C.text, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.nombre}</div>
-                        <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>{u.email}</div>
+                        <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>{u.username}</div>
                         <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>Rol: {u.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}</div>
                       </div>
                       <Btn variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); deleteUsuario(u.id); }} style={{ padding: "5px 10px" }}>🗑</Btn>
@@ -915,7 +915,7 @@ export default function App() {
               <h2 style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "serif" }}>Detalles del Usuario</h2>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px", marginBottom: 20 }}>
                 <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nombre</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.nombre}</div></div>
-                <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Email</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.email}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Nombre de Usuario</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.username}</div></div>
                 <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Rol</div><div style={{ color: C.goldLight, fontSize: 15, fontWeight: 500 }}>{editingUser.role === "admin" ? "👑 Administrador" : "⚕️ Doctor"}</div></div>
                 <div><div style={{ color: C.muted, fontSize: 12, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Estado</div><div style={{ color: editingUser.is_active ? C.success : C.danger, fontSize: 15, fontWeight: 500 }}>{editingUser.is_active ? "✅ Activo" : "❌ Inactivo"}</div></div>
               </div>

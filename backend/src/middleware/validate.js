@@ -31,9 +31,9 @@ function validate(schema) {
 const schemas = {
   // Autenticación
   login: Joi.object({
-    email: Joi.string().email().required().messages({
-      'string.email': 'Email debe ser válido',
-      'any.required': 'Email es requerido',
+    username: Joi.string().username().required().messages({
+      'string.username': 'Nombre de Usuario debe ser válido',
+      'any.required': 'Nombre de Usuario es requerido',
     }),
     password: Joi.string().min(6).required().messages({
       'string.min': 'Password debe tener al menos 6 caracteres',
@@ -49,14 +49,14 @@ const schemas = {
 
   // Usuarios
   createUser: Joi.object({
-    email: Joi.string().email().required(),
+    username: Joi.string().username().required(),
     password: Joi.string().min(8).required(),
     nombre: Joi.string().min(2).max(255).required(),
     role: Joi.string().valid('admin', 'doctor').required(),
   }),
 
   updateUser: Joi.object({
-    email: Joi.string().email(),
+    username: Joi.string().username(),
     password: Joi.string().min(8),
     nombre: Joi.string().min(2).max(255),
     role: Joi.string().valid('admin', 'doctor'),
