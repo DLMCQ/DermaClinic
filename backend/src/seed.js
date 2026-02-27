@@ -11,30 +11,28 @@ async function seed() {
     await initDb();
     const db = getDb();
 
-    // Check if demo user exists
-    const demoUser = await db.queryOne(
-      'SELECT * FROM users WHERE email = $1',
-      ['demo@dermaclinic.com']
-    );
+    // Crear usuarios iniciales
+    const users = [
+      { email: 'admin@dermaclinic.com', password: 'admin123', nombre: 'Administrador', role: 'admin' },
+      { email: 'demo@dermaclinic.com', password: 'password', nombre: 'Demo User', role: 'doctor' },
+    ];
 
-    if (demoUser) {
-      console.log('✅ Demo user already exists');
-      await closeDb();
-      return;
+    for (const userData of users) {
+      const exists = await db.queryOne(
+        'SELECT * FROM users WHERE email = $1',
+        [userData.email]
+      );
+
+      if (!exists) {
+        const hashedPassword = await hashPassword(userData.password);
+        await db.execute(
+          `INSERT INTO users (email, password_hash, nombre, role, is_active) 
+           VALUES ($1, $2, $3, $4, $5)`,
+          [userData.email, hashedPassword, userData.nombre, userData.role, true]
+        );
+        console.log(`✅ Usuario creado: ${userData.email}`);
+      }
     }
-
-    // Create demo user
-    const hashedPassword = await hashPassword('password');
-    
-    await db.execute(
-      `INSERT INTO users (email, password_hash, nombre, role, is_active) 
-       VALUES ($1, $2, $3, $4, $5)`,
-      ['demo@dermaclinic.com', hashedPassword, 'Demo User', 'doctor', true]
-    );
-
-    console.log('✅ Demo user created successfully');
-    console.log('   Email: demo@dermaclinic.com');
-    console.log('   Password: password');
     
     await closeDb();
   } catch (err) {
