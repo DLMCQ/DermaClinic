@@ -14,8 +14,8 @@ moment.locale("es");
 const localizer = momentLocalizer(moment);
 
 const ESTADO_COLORS = {
-  pendiente: "#887043",
-  confirmada: "#376a47",
+  pendiente: "#c9a96e",
+  confirmada: "#5a9e6f",
   cancelada: "#e05a5a",
 };
 
@@ -26,7 +26,7 @@ const calendarStyles = `
   .rbc-header { background: #1a1410; border-color: #3a2e24 !important; color: #a0896a; padding: 10px 4px; font-size: 13px; font-weight: 600; }
   .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #3a2e24 !important; }
   .rbc-day-bg { border-color: #3a2e24 !important; }
-  .rbc-day-bg.rbc-today { background: rgba(201,169,110,0.13); border-top: 2px solid #c9a96e !important; }
+  .rbc-day-bg.rbc-today { background: transparent; }
   .rbc-off-range-bg { background: #0f0c09; }
   .rbc-date-cell { color: #666; font-size: 13px; padding: 4px 6px; }
   .rbc-date-cell.rbc-now { color: #c9a96e; font-weight: 700; }
@@ -41,7 +41,7 @@ const calendarStyles = `
   .rbc-timeslot-group { border-color: #3a2e24 !important; }
   .rbc-time-content { border-color: #3a2e24 !important; }
   .rbc-time-header-content { border-color: #3a2e24 !important; }
-  .rbc-current-time-indicator { background: #3a2e24; }
+  .rbc-current-time-indicator { background: #c9a96e; }
   .rbc-show-more { color: #c9a96e; background: transparent; font-size: 12px; }
   .rbc-agenda-table { border-color: #3a2e24; }
   .rbc-agenda-table td, .rbc-agenda-table th { border-color: #3a2e24 !important; color: #e8d5b7; }
@@ -224,8 +224,8 @@ export default function AppointmentsPage() {
     const color = ESTADO_COLORS[event.resource.estado] || C.gold;
     return {
       style: {
-        backgroundColor: `${color}90`,
-        border: `1px solid ${color}90`,
+        backgroundColor: `${color}40`,
+        border: `1px solid ${color}`,
         color: color,
         fontWeight: 600,
         boxShadow: `0 1px 4px ${color}30`,
