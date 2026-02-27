@@ -1,0 +1,13 @@
+{
+  "name": "dermaclinic",
+  "version": "1.0.0",
+  "description": "DermaClinic - Sistema de Gestión Dermatológica",
+  "private": true,
+  "scripts": {
+    "start": "bash start.sh",
+    "postinstall": "echo 'Build completed'"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
