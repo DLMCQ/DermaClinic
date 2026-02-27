@@ -13,18 +13,18 @@ const router = express.Router();
  */
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const db = getDb();
 
-    // Find user by username
+    // Find user by email
     const user = await db.queryOne(
-      'SELECT * FROM users WHERE username = $1 AND is_active = $2',
-      [username.toLowerCase(), true]
+      'SELECT * FROM users WHERE email = $1 AND is_active = $2',
+      [email.toLowerCase(), true]
     );
 
     if (!user) {
@@ -154,7 +154,7 @@ router.get('/me', authenticate, async (req, res) => {
       // In local mode, return dummy user
       return res.json({
         id: 'local-user',
-        username: 'local',
+        email: 'local@dermaclinic.com',
         nombre: 'Usuario Local',
         role: 'admin',
         is_active: true,
@@ -164,7 +164,7 @@ router.get('/me', authenticate, async (req, res) => {
     const db = getDb();
 
     const user = await db.queryOne(
-      'SELECT id, username, nombre, role, is_active, created_at FROM users WHERE id = $1',
+      'SELECT id, email, nombre, role, is_active, created_at FROM users WHERE id = $1',
       [req.user.userId]
     );
 

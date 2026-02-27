@@ -24,7 +24,7 @@ router.get('/', cloudOnly, authenticate, requireRole('admin'), async (req, res, 
     const db = getDb();
 
     const users = await db.query(`
-      SELECT id, username, nombre, role, is_active, created_at, updated_at
+      SELECT id, email, nombre, role, is_active, created_at, updated_at
       FROM users
       ORDER BY created_at DESC
     `);
@@ -49,7 +49,7 @@ router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
     }
 
     const user = await db.queryOne(`
-      SELECT id, username, nombre, role, is_active, created_at, updated_at
+      SELECT id, email, nombre, role, is_active, created_at, updated_at
       FROM users
       WHERE id = $1
     `, [id]);
@@ -75,18 +75,18 @@ router.post(
   validate(schemas.createUser),
   async (req, res, next) => {
     try {
-      const { username, password, nombre, role } = req.body;
+      const { email, password, nombre, role } = req.body;
       const db = getDb();
 
-      // Verificar que el username no exista
+      // Verificar que el email no exista
       const existing = await db.queryOne(
-        'SELECT id FROM users WHERE username = $1',
-        [username]
+        'SELECT id FROM users WHERE email = $1',
+        [email]
       );
 
       if (existing) {
         return res.status(409).json({
-          error: 'Ya existe un usuario con este Nombre de Usuario',
+          error: 'Ya existe un usuario con este email',
         });
       }
 
@@ -95,10 +95,10 @@ router.post(
 
       // Crear usuario
       const user = await db.queryOne(`
-        INSERT INTO users (username, password_hash, nombre, role)
+        INSERT INTO users (email, password_hash, nombre, role)
         VALUES ($1, $2, $3, $4)
-        RETURNING id, username, nombre, role, is_active, created_at
-      `, [username, password_hash, nombre, role]);
+        RETURNING id, email, nombre, role, is_active, created_at
+      `, [email, password_hash, nombre, role]);
 
       res.status(201).json(user);
     } catch (error) {
@@ -157,7 +157,7 @@ router.put(
         UPDATE users
         SET ${setClause}, updated_at = NOW()
         WHERE id = $1
-        RETURNING id, username, nombre, role, is_active, updated_at
+        RETURNING id, email, nombre, role, is_active, updated_at
       `, values);
 
       if (!user) {
@@ -190,7 +190,7 @@ router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req,
       UPDATE users
       SET is_active = false, updated_at = NOW()
       WHERE id = $1
-      RETURNING id, username, nombre, is_active
+      RETURNING id, email, nombre, is_active
     `, [id]);
 
     if (!user) {
@@ -218,7 +218,7 @@ router.patch('/:id/activate', cloudOnly, authenticate, requireRole('admin'), asy
       UPDATE users
       SET is_active = true, updated_at = NOW()
       WHERE id = $1
-      RETURNING id, username, nombre, is_active
+      RETURNING id, email, nombre, is_active
     `, [id]);
 
     if (!user) {
