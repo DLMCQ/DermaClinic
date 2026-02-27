@@ -16,19 +16,17 @@ const localizer = momentLocalizer(moment);
 const ESTADO_COLORS = {
   pendiente: "#c9a96e",
   confirmada: "#5a9e6f",
-  completada: "#7eb8f7",
   cancelada: "#e05a5a",
 };
 
-const ESTADOS = ["pendiente", "confirmada", "completada", "cancelada"];
+const ESTADOS = ["pendiente", "confirmada", "cancelada"];
 
-// Estilos del calendario para coincidir con el tema oscuro
 const calendarStyles = `
   .rbc-calendar { background: transparent; color: #e8d5b7; font-family: 'DM Sans', sans-serif; }
   .rbc-header { background: #1a1410; border-color: #3a2e24 !important; color: #a0896a; padding: 10px 4px; font-size: 13px; font-weight: 600; }
   .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #3a2e24 !important; }
   .rbc-day-bg { border-color: #3a2e24 !important; }
-  .rbc-day-bg.rbc-today { background: rgba(201,169,110,0.06); }
+  .rbc-day-bg.rbc-today { background: rgba(201,169,110,0.13); border-top: 2px solid #c9a96e !important; }
   .rbc-off-range-bg { background: #0f0c09; }
   .rbc-date-cell { color: #666; font-size: 13px; padding: 4px 6px; }
   .rbc-date-cell.rbc-now { color: #c9a96e; font-weight: 700; }
@@ -129,7 +127,7 @@ function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {
   );
 }
 
-function AppointmentDetail({ appointment, onEdit, onComplete, onCancel, onDelete, onClose, loading }) {
+function AppointmentDetail({ appointment, onEdit, onCancel, onDelete, onClose, loading }) {
   const estado = appointment.estado;
   return (
     <div>
@@ -169,9 +167,6 @@ function AppointmentDetail({ appointment, onEdit, onComplete, onCancel, onDelete
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
         <Btn variant="ghost" onClick={onClose} disabled={loading}>Cerrar</Btn>
         <Btn variant="ghost" size="sm" onClick={onEdit} disabled={loading}>✏️ Editar</Btn>
-        {estado !== "completada" && estado !== "cancelada" && (
-          <Btn variant="success" size="sm" onClick={onComplete} disabled={loading}>✅ Completar</Btn>
-        )}
         {estado !== "cancelada" && (
           <Btn variant="danger" size="sm" onClick={onCancel} disabled={loading}>✕ Cancelar</Btn>
         )}
@@ -187,7 +182,7 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const [modal, setModal] = useState(null); // null | "new" | "edit" | "detail"
+  const [modal, setModal] = useState(null);
   const [selectedApt, setSelectedApt] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [currentView, setCurrentView] = useState(Views.WEEK);
@@ -229,9 +224,11 @@ export default function AppointmentsPage() {
     const color = ESTADO_COLORS[event.resource.estado] || C.gold;
     return {
       style: {
-        backgroundColor: `${color}25`,
-        border: `1px solid ${color}60`,
+        backgroundColor: `${color}40`,
+        border: `1px solid ${color}`,
         color: color,
+        fontWeight: 600,
+        boxShadow: `0 1px 4px ${color}30`,
       },
     };
   };
@@ -260,20 +257,6 @@ export default function AppointmentsPage() {
       }
       setModal(null);
       setSelectedApt(null);
-    } catch (e) {
-      showToast(e.message, "error");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleComplete = async () => {
-    setActionLoading(true);
-    try {
-      const { appointment } = await api.completeAppointment(selectedApt.id);
-      setAppointments((prev) => prev.map((a) => (a.id === selectedApt.id ? { ...a, ...appointment } : a)));
-      setSelectedApt((a) => ({ ...a, estado: "completada" }));
-      showToast("Cita marcada como completada");
     } catch (e) {
       showToast(e.message, "error");
     } finally {
@@ -423,7 +406,6 @@ export default function AppointmentsPage() {
           <AppointmentDetail
             appointment={selectedApt}
             onEdit={() => setModal("edit")}
-            onComplete={handleComplete}
             onCancel={handleCancel}
             onDelete={handleDelete}
             onClose={() => { setModal(null); setSelectedApt(null); }}

@@ -49,16 +49,17 @@ export default function UsersPage() {
         setUsuarios((us) =>
           us.map((u) => (u.id === editingUser.id ? updated : u))
         );
+        setEditingUser(updated);
         showToast("Usuario actualizado");
       } else {
         const newU = await api.createUsuario(form);
         setUsuarios((us) =>
           [newU, ...us].sort((a, b) => a.email.localeCompare(b.email))
         );
+        setEditingUser(newU);
         showToast("Usuario creado correctamente");
       }
       setModal(null);
-      setEditingUser(null);
     } catch (e) {
       showToast(e.message, "error");
     } finally {
