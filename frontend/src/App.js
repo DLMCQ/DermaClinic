@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { api } from "./api";
+import { api, setTokenExpiredCallback } from "./api";
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 const TRATAMIENTOS = [
@@ -559,6 +559,16 @@ export default function App() {
   const searchTimeout = useRef();
 
   const showToast = (message, type = "success") => setToast({ message, type });
+
+  // Configurar callback para cuando expira el token
+  useEffect(() => {
+    if (user) {
+      setTokenExpiredCallback(() => {
+        setUser(null);
+        showToast("Sesión expirada. Por favor, inicia sesión de nuevo.", "error");
+      });
+    }
+  }, [user]);
 
   // Cargar lista de pacientes
   const loadPatients = useCallback(async (q) => {
