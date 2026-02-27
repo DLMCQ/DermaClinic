@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../utils/api";
+import { useNavigate } from "react-router-dom";
 import { Avatar } from "../components/common/Avatar";
 import { Btn } from "../components/common/Btn";
 import { Modal } from "../components/common/Modal";
@@ -22,7 +23,8 @@ function useIsMobile() {
 }
 
 export default function PatientsPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
@@ -232,117 +234,40 @@ export default function PatientsPage() {
   };
 
   return (
-    <div
-      style={{
-        background: C.bg,
-        minHeight: "100vh",
-        color: C.text,
-        fontFamily: "'DM Sans', sans-serif",
-      }}
-    >
-      <style>{`@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } input:focus, select:focus, textarea:focus { border-color: ${C.gold} !important; }`}</style>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", color: C.text }}>
 
-      {/* Header */}
-      <div
-        style={{
-          background: C.surface,
-          borderBottom: `1px solid ${C.border}`,
-          padding: isMobile ? "0 14px" : "0 28px",
-          display: "flex",
-          alignItems: "center",
-          height: 60,
-          gap: isMobile ? 10 : 20,
-        }}
-      >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            flexShrink: 0,
-          }}
-        >
-          ⚕
-        </div>
-        <div>
-          <div
-            style={{
-              color: C.gold,
-              fontWeight: 700,
-              fontSize: isMobile ? 15 : 17,
-              fontFamily: "serif",
-              letterSpacing: 0.5,
-            }}
-          >
-            DermaClinic
-          </div>
-          {!isMobile && (
-            <div style={{ color: C.muted, fontSize: 11, marginTop: -1 }}>
-              Sistema de Gestión
-            </div>
-          )}
-        </div>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
-          {!isMobile && (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.success }} />
-                <span style={{ color: C.muted, fontSize: 12 }}>Servidor activo</span>
-              </div>
-              <div style={{ height: 20, width: 1, background: C.border }} />
-            </>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10 }}>
-            {!isMobile && (
-              <span style={{ color: C.goldLight, fontSize: 13, fontWeight: 500 }}>
-                {user.email || "Usuario"}
-              </span>
-            )}
-            {user.role === "admin" && (
-              <>
-                {!isMobile && <div style={{ height: 16, width: 1, background: C.border }} />}
-                <Btn
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setAdminTab(adminTab === "pacientes" ? "usuarios" : "pacientes");
-                    setMobileView("list");
-                    setSelected(null);
-                  }}
-                  style={{ padding: "5px 10px" }}
-                >
-                  {adminTab === "usuarios" ? "👥" : "👤"}
-                  {!isMobile && (adminTab === "usuarios" ? " Usuarios" : " Gestión")}
-                </Btn>
-              </>
-            )}
-            <Btn
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                logout();
+      {/* Tab selector (admin) */}
+      {user?.role === "admin" && (
+        <div style={{ display: "flex", gap: 8, padding: "12px 16px 0", borderBottom: `1px solid ${C.border}`, background: "#120f0b" }}>
+          {[["pacientes", "🌸 Pacientes"], ["usuarios", "👥 Usuarios"]].map(([tab, label]) => (
+            <button
+              key={tab}
+              onClick={() => { setAdminTab(tab); setMobileView("list"); setSelected(null); }}
+              style={{
+                background: adminTab === tab ? "rgba(201,169,110,0.12)" : "transparent",
+                border: "none",
+                borderBottom: adminTab === tab ? `2px solid ${C.gold}` : "2px solid transparent",
+                color: adminTab === tab ? C.gold : C.muted,
+                padding: "8px 16px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontSize: 13,
+                fontWeight: adminTab === tab ? 600 : 400,
               }}
-              style={{ padding: "5px 10px" }}
             >
-              {isMobile ? "↩" : "Cerrar sesión"}
-            </Btn>
-          </div>
+              {label}
+            </button>
+          ))}
         </div>
-      </div>
+      )}
 
       {/* Layout */}
       <div
         style={{
           display: "flex",
           flexDirection: isMobile ? "column" : "row",
-          height: isMobile ? "auto" : "calc(100vh - 60px)",
-          minHeight: isMobile ? "calc(100vh - 60px)" : "auto",
+          flex: 1,
+          overflow: "hidden",
         }}
       >
         {/* Sidebar */}
@@ -357,6 +282,7 @@ export default function PatientsPage() {
             flexDirection: "column",
             background: "#120f0b",
             flexShrink: 0,
+            overflow: "hidden",
           }}
         >
           <div style={{ padding: "18px 16px 14px" }}>
