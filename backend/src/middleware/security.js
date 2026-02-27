@@ -9,6 +9,14 @@ const helmetConfig = helmet({
   crossOriginEmbedderPolicy: false, // Allow loading images
 });
 
+// Custom keyGenerator para obtener IP detrás de proxy
+const getClientIp = (req) => {
+  return req.headers['x-forwarded-for']?.split(',')[0] || 
+         req.headers['x-real-ip'] ||
+         req.connection.remoteAddress ||
+         req.socket.remoteAddress;
+};
+
 // Rate limiting para prevenir ataques de fuerza bruta
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -19,6 +27,7 @@ const generalLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
   skip: (req) => config.isLocal, // No rate limiting en modo local
+  keyGenerator: getClientIp,
 });
 
 // Rate limiting más estricto para login
@@ -31,6 +40,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => config.isLocal,
+  keyGenerator: getClientIp,
 });
 
 // Compression middleware

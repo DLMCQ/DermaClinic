@@ -10,6 +10,8 @@ const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmetConfig);
 app.use(compressionConfig);
@@ -66,6 +68,55 @@ app.get("/api/health", (req, res) => res.json({
   env: config.env,
   timestamp: new Date().toISOString(),
 }));
+
+// Debug endpoint - Ver todas las tablas de la base de datos
+app.get("/api/debug/tables", async (req, res) => {
+  try {
+    const db = getDb();
+    
+    let data = {};
+    
+    if (config.isLocal) {
+      // SQLite query
+      data.users = db.db.exec("SELECT * FROM users")[0]?.values || [];
+      data.pacientes = db.db.exec("SELECT * FROM pacientes")[0]?.values || [];
+      data.sesiones = db.db.exec("SELECT * FROM sesiones")[0]?.values || [];
+    } else {
+      // PostgreSQL query
+      const usersResult = await db.pool.query("SELECT * FROM users");
+      const pacientesResult = await db.pool.query("SELECT * FROM pacientes");
+      const sesionesResult = await db.pool.query("SELECT * FROM sesiones");
+      
+      data.users = usersResult.rows;
+      data.pacientes = pacientesResult.rows;
+      data.sesiones = sesionesResult.rows;
+    }
+    
+    res.json({
+      success: true,
+      database: config.isLocal ? 'SQLite' : 'PostgreSQL',
+      tables: {
+        users: {
+          count: data.users.length,
+          data: data.users
+        },
+        pacientes: {
+          count: data.pacientes.length,
+          data: data.pacientes
+        },
+        sesiones: {
+          count: data.sesiones.length,
+          data: data.sesiones
+        }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
 
 // Catchall React (debe estar antes del 404 handler)
 if (fs.existsSync(FRONTEND_BUILD)) {
