@@ -465,7 +465,7 @@ export default function PatientsPage() {
                           {u.nombre}
                         </div>
                         <div style={{ color: C.goldLight, fontSize: 12, marginTop: 2 }}>
-                          {u.email}
+                          {u.username}
                         </div>
                         <div style={{ color: C.muted, fontSize: 11, marginTop: 3 }}>
                           Rol:{" "}
