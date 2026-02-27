@@ -13,18 +13,18 @@ function useIsMobile() {
   return isMobile;
 }
 
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: "📊" },
-  { to: "/pacientes", label: "Pacientes", icon: "🌸" },
-  { to: "/citas", label: "Citas", icon: "📅" },
-  ...(user?.role === "admin" ? [{ to: "/usuarios", label: "👥 Usuarios" }] : []),
-];
-
 export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navItems = [
+    { to: "/dashboard", label: "Dashboard", icon: "📊" },
+    { to: "/pacientes", label: "Pacientes", icon: "🌸" },
+    { to: "/citas", label: "Citas", icon: "📅" },
+    ...(user?.role === "admin" ? [{ to: "/usuarios", label: "Usuarios", icon: "👥" }] : []),
+  ];
 
   const handleLogout = () => {
     logout();
