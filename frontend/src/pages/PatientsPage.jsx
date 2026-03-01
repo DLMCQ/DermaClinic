@@ -21,11 +21,18 @@ function useIsMobile() {
   return isMobile;
 }
 
+const ESTADO_COLORS = {
+  pendiente: "#c9a96e",
+  confirmada: "#5a9e6f",
+  cancelada: "#e05a5a",
+};
+
 export default function PatientsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [editingSession, setEditingSession] = useState(null);
@@ -62,6 +69,17 @@ export default function PatientsPage() {
       const data = await api.getPaciente(p.id);
       setSelected(data);
       if (isMobile) setMobileView("detail");
+
+      // Traer próximas citas del paciente
+      try {
+        const citas = await api.getAppointments({
+          paciente_id: p.id,
+          fecha_desde: new Date().toISOString(),
+        });
+        setAppointments(citas.filter((c) => c.estado !== "cancelada"));
+      } catch {
+        setAppointments([]);
+      }
     } catch (e) {
       showToast("Error al cargar ficha: " + e.message, "error");
     }
@@ -79,6 +97,7 @@ export default function PatientsPage() {
           )
         );
         setSelected(newP);
+        setAppointments([]);
         showToast("Paciente creada correctamente");
       } else {
         const updated = await api.updatePaciente(selected.id, form);
@@ -103,7 +122,10 @@ export default function PatientsPage() {
     try {
       await api.deletePaciente(confirmDelete.id);
       setPatients((ps) => ps.filter((p) => p.id !== confirmDelete.id));
-      if (selected?.id === confirmDelete.id) setSelected(null);
+      if (selected?.id === confirmDelete.id) {
+        setSelected(null);
+        setAppointments([]);
+      }
       showToast("Paciente eliminada");
     } catch (e) {
       showToast(e.message, "error");
@@ -503,7 +525,7 @@ export default function PatientsPage() {
                     <Btn
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate("/citas", { state: { paciente_id: selected.id, paciente_nombre: selected.nombre } })}
+                      onClick={() => navigate("/citas", { state: { paciente_id: selected.id } })}
                     >
                       📅 Cita
                     </Btn>
@@ -517,6 +539,73 @@ export default function PatientsPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Próximas citas */}
+              {appointments.length > 0 && (
+                <div style={{ marginBottom: 22 }}>
+                  <h2
+                    style={{
+                      margin: "0 0 14px",
+                      color: C.gold,
+                      fontSize: isMobile ? 16 : 19,
+                      fontFamily: "serif",
+                    }}
+                  >
+                    Próximas citas{" "}
+                    <span style={{ color: C.muted, fontWeight: 400, fontSize: 14 }}>
+                      ({appointments.length})
+                    </span>
+                  </h2>
+                  {appointments.map((apt) => (
+                    <div
+                      key={apt.id}
+                      style={{
+                        background: C.surface,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 12,
+                        padding: "14px 18px",
+                        marginBottom: 10,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div>
+                        <div style={{ color: C.text, fontWeight: 600, fontSize: 15 }}>
+                          {apt.tratamiento_planeado || "Sin tratamiento especificado"}
+                        </div>
+                        <div style={{ color: C.gold, fontSize: 13, marginTop: 3 }}>
+                          📅 {new Date(apt.fecha_hora).toLocaleString("es-AR", {
+                            dateStyle: "long",
+                            timeStyle: "short",
+                          })}
+                        </div>
+                        {apt.doctor_nombre && (
+                          <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>
+                            👩‍⚕️ {apt.doctor_nombre}
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          background: `${ESTADO_COLORS[apt.estado]}20`,
+                          color: ESTADO_COLORS[apt.estado],
+                          fontSize: 12,
+                          padding: "3px 12px",
+                          borderRadius: 20,
+                          fontWeight: 600,
+                          textTransform: "capitalize",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {apt.estado}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Sesiones */}
               <div
