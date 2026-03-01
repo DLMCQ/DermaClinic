@@ -53,7 +53,6 @@ export default function UsersPage() {
         showToast("Usuario actualizado");
       } else {
         const newU = await api.createUsuario(form);
-        console.log("usuario creado:", newU);
         setUsuarios((us) =>
           [newU, ...us].sort((a, b) =>
             (a.nombre || a.username || "").localeCompare(b.nombre || b.username || "")
@@ -119,7 +118,7 @@ export default function UsersPage() {
         >
           <div style={{ padding: "18px 16px 14px" }}>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-              <Btn style={{ flex: 1 }} onClick={() => setModal("newUser")}>
+              <Btn style={{ flex: 1 }} onClick={() => { setEditingUser(null); setModal("newUser"); }}>
                 + Nuevo Usuario
               </Btn>
             </div>
