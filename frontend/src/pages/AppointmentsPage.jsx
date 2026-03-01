@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/es";
@@ -184,6 +185,7 @@ function AppointmentDetail({ appointment, onEdit, onCancel, onDelete, onClose, l
 }
 
 export default function AppointmentsPage() {
+  const location = useLocation();
   const [appointments, setAppointments] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +194,7 @@ export default function AppointmentsPage() {
   const [modal, setModal] = useState(null);
   const [selectedApt, setSelectedApt] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [preselectedPaciente, setPreselectedPaciente] = useState(null);
   const [currentView, setCurrentView] = useState(Views.WEEK);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCloudMode, setIsCloudMode] = useState(true);
@@ -218,6 +221,15 @@ export default function AppointmentsPage() {
     loadAppointments();
     api.getPacientes().then(setPacientes).catch(() => {});
   }, [loadAppointments]);
+
+  // Abrir modal con paciente preseleccionado si viene de PatientsPage
+  useEffect(() => {
+    if (location.state?.paciente_id && !loading) {
+      setPreselectedPaciente(location.state.paciente_id);
+      setSelectedSlot(new Date());
+      setModal("new");
+    }
+  }, [location.state, loading]);
 
   const events = appointments.map((apt) => ({
     id: apt.id,
@@ -246,6 +258,7 @@ export default function AppointmentsPage() {
   };
 
   const handleSelectSlot = ({ start }) => {
+    setPreselectedPaciente(null);
     setSelectedSlot(start);
     setModal("new");
   };
@@ -265,6 +278,7 @@ export default function AppointmentsPage() {
       }
       setModal(null);
       setSelectedApt(null);
+      setPreselectedPaciente(null);
     } catch (e) {
       showToast(e.message, "error");
     } finally {
@@ -338,7 +352,7 @@ export default function AppointmentsPage() {
             {appointments.length} cita{appointments.length !== 1 ? "s" : ""} · Click en un slot para crear, click en evento para ver detalles
           </p>
         </div>
-        <Btn onClick={() => { setSelectedSlot(new Date()); setModal("new"); }}>
+        <Btn onClick={() => { setPreselectedPaciente(null); setSelectedSlot(new Date()); setModal("new"); }}>
           + Nueva cita
         </Btn>
       </div>
@@ -394,14 +408,21 @@ export default function AppointmentsPage() {
       {(modal === "new" || modal === "edit") && (
         <Modal
           title={modal === "new" ? "Nueva Cita" : "Editar Cita"}
-          onClose={() => { setModal(null); setSelectedApt(null); }}
+          onClose={() => { setModal(null); setSelectedApt(null); setPreselectedPaciente(null); }}
           wide
         >
           <AppointmentForm
-            appointment={modal === "edit" ? selectedApt : selectedSlot ? { fecha_hora: toLocalISO(selectedSlot) } : null}
+            appointment={
+              modal === "edit"
+                ? selectedApt
+                : {
+                    fecha_hora: selectedSlot ? toLocalISO(selectedSlot) : toLocalISO(new Date()),
+                    paciente_id: preselectedPaciente || "",
+                  }
+            }
             pacientes={pacientes}
             onSave={saveAppointment}
-            onClose={() => { setModal(null); setSelectedApt(null); }}
+            onClose={() => { setModal(null); setSelectedApt(null); setPreselectedPaciente(null); }}
             loading={actionLoading}
           />
         </Modal>

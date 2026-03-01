@@ -501,6 +501,13 @@ export default function PatientsPage() {
                       ✏️ Editar
                     </Btn>
                     <Btn
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/citas", { state: { paciente_id: selected.id, paciente_nombre: selected.nombre } })}
+                    >
+                      📅 Cita
+                    </Btn>
+                    <Btn
                       variant="success"
                       size="sm"
                       onClick={() => generatePDF(selected, formatDate, calcAge)}
