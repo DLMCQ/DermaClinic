@@ -26,8 +26,23 @@ export function SessionForm({ session, onSave, onClose, loading }) {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const handleSubmit = () => {
+    if (!form.fecha || !form.tratamiento) {
+      alert("Fecha y tratamiento son obligatorios");
+      return;
+    }
+    onSave(form);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <div>
+    <div onKeyDown={handleKeyDown}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
         <Input label="Fecha" value={form.fecha} onChange={set("fecha")} type="date" required />
         <Select
@@ -68,16 +83,7 @@ export function SessionForm({ session, onSave, onClose, loading }) {
         <Btn variant="ghost" onClick={onClose} disabled={loading}>
           Cancelar
         </Btn>
-        <Btn
-          disabled={loading}
-          onClick={() => {
-            if (!form.fecha || !form.tratamiento) {
-              alert("Fecha y tratamiento son obligatorios");
-              return;
-            }
-            onSave(form);
-          }}
-        >
+        <Btn disabled={loading} onClick={handleSubmit}>
           {loading ? "Guardando..." : session ? "Guardar cambios" : "Registrar sesión"}
         </Btn>
       </div>

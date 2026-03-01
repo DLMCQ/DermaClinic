@@ -73,63 +73,71 @@ function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+    const handleSubmit = () => {
+    if (!form.paciente_id || !form.fecha_hora) {
+      alert("Paciente y fecha son obligatorios");
+      return;
+    }
+    onSave(form);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-        <div style={{ gridColumn: "1 / -1" }}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", color: C.goldLight, fontSize: 11, marginBottom: 6, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase" }}>
-              Paciente *
-            </label>
-            <select
-              value={form.paciente_id}
-              onChange={set("paciente_id")}
-              style={{ width: "100%", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: form.paciente_id ? C.text : C.muted, padding: "10px 14px", fontSize: 14, fontFamily: "inherit" }}
-            >
-              <option value="">Seleccionar paciente...</option>
-              {pacientes.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre} — DNI: {p.dni}</option>
-              ))}
-            </select>
+    <div onKeyDown={handleKeyDown}>
+      <div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", color: C.goldLight, fontSize: 11, marginBottom: 6, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase" }}>
+                Paciente *
+              </label>
+              <select
+                value={form.paciente_id}
+                onChange={set("paciente_id")}
+                style={{ width: "100%", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: form.paciente_id ? C.text : C.muted, padding: "10px 14px", fontSize: 14, fontFamily: "inherit" }}
+              >
+                <option value="">Seleccionar paciente...</option>
+                {pacientes.map((p) => (
+                  <option key={p.id} value={p.id}>{p.nombre} — DNI: {p.dni}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <Input label="Fecha y hora" value={form.fecha_hora} onChange={set("fecha_hora")} type="datetime-local" required />
+          <Input
+            label="Duración (minutos)"
+            value={form.duracion_minutos}
+            onChange={set("duracion_minutos")}
+            type="number"
+          />
+          <Select
+            label="Tratamiento planeado"
+            value={form.tratamiento_planeado}
+            onChange={set("tratamiento_planeado")}
+            options={TRATAMIENTOS}
+          />
+          <Select
+            label="Estado"
+            value={form.estado}
+            onChange={set("estado")}
+            options={ESTADOS}
+          />
+          <div style={{ gridColumn: "1 / -1" }}>
+            <Textarea label="Notas" value={form.notas} onChange={set("notas")} placeholder="Indicaciones, preparación..." />
           </div>
         </div>
-        <Input label="Fecha y hora" value={form.fecha_hora} onChange={set("fecha_hora")} type="datetime-local" required />
-        <Input
-          label="Duración (minutos)"
-          value={form.duracion_minutos}
-          onChange={set("duracion_minutos")}
-          type="number"
-        />
-        <Select
-          label="Tratamiento planeado"
-          value={form.tratamiento_planeado}
-          onChange={set("tratamiento_planeado")}
-          options={TRATAMIENTOS}
-        />
-        <Select
-          label="Estado"
-          value={form.estado}
-          onChange={set("estado")}
-          options={ESTADOS}
-        />
-        <div style={{ gridColumn: "1 / -1" }}>
-          <Textarea label="Notas" value={form.notas} onChange={set("notas")} placeholder="Indicaciones, preparación..." />
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+          <Btn variant="ghost" onClick={onClose} disabled={loading}>Cancelar</Btn>
+          <Btn disabled={loading} onClick={handleSubmit}>
+            {loading ? "Guardando..." : appointment ? "Guardar cambios" : "Crear cita"}
+          </Btn>
         </div>
-      </div>
-      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
-        <Btn variant="ghost" onClick={onClose} disabled={loading}>Cancelar</Btn>
-        <Btn
-          disabled={loading}
-          onClick={() => {
-            if (!form.paciente_id || !form.fecha_hora) {
-              alert("Paciente y fecha son obligatorios");
-              return;
-            }
-            onSave(form);
-          }}
-        >
-          {loading ? "Guardando..." : appointment ? "Guardar cambios" : "Crear cita"}
-        </Btn>
       </div>
     </div>
   );
