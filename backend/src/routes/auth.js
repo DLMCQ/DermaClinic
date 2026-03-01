@@ -44,8 +44,14 @@ router.post('/login', async (req, res) => {
 
     // Store refresh token in database
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    expiresAt.setDate(expiresAt.getDate() + 8); // 8 hours
 
+    // Limpiar tokens viejos o expirados del usuario antes de insertar
+    await db.execute(
+      'DELETE FROM refresh_tokens WHERE user_id = $1 OR expires_at <= $2',
+      [user.id, new Date().toISOString()]
+    );
+    
     await db.execute(
       'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
       [user.id, refreshToken, expiresAt.toISOString()]
