@@ -53,6 +53,7 @@ export default function UsersPage() {
         showToast("Usuario actualizado");
       } else {
         const newU = await api.createUsuario(form);
+        console.log("usuario creado:", newU);
         setUsuarios((us) =>
           [newU, ...us].sort((a, b) =>
             (a.nombre || a.username || "").localeCompare(b.nombre || b.username || "")
