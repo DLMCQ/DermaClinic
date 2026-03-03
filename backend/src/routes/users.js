@@ -4,22 +4,10 @@ const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roleCheck');
 const { validate, schemas } = require('../middleware/validate');
 const { hashPassword } = require('../utils/password');
-const config = require('../config');
-
 const router = express.Router();
 
-// Solo disponible en modo cloud
-const cloudOnly = (req, res, next) => {
-  if (config.isLocal) {
-    return res.status(404).json({
-      error: 'Endpoint solo disponible en modo cloud',
-    });
-  }
-  next();
-};
-
 // Listar todos los usuarios (solo admin)
-router.get('/', cloudOnly, authenticate, requireRole('admin'), async (req, res, next) => {
+router.get('/', authenticate, requireRole('admin'), async (req, res, next) => {
   try {
     const db = getDb();
 
@@ -36,7 +24,7 @@ router.get('/', cloudOnly, authenticate, requireRole('admin'), async (req, res, 
 });
 
 // Obtener un usuario por ID (admin o el mismo usuario)
-router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -174,7 +162,7 @@ router.put(
 );
 
 // Desactivar usuario (solo admin) - soft delete
-router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req, res, next) => {
+router.delete('/:id', authenticate, requireRole('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();

@@ -1,5 +1,3 @@
-const config = require('../config');
-
 /**
  * Role-based access control middleware
  * @param {...string} allowedRoles - Roles that can access the route ('admin', 'doctor')
@@ -7,11 +5,6 @@ const config = require('../config');
  */
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
-    // Skip role check in local mode
-    if (config.isLocal) {
-      return next();
-    }
-
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }

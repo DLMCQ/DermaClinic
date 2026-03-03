@@ -3,8 +3,6 @@ const { getDb } = require('../database');
 const { hashPassword, comparePassword } = require('../utils/password');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
-const config = require('../config');
-
 const router = express.Router();
 
 /**
@@ -156,17 +154,6 @@ router.post('/logout', async (req, res) => {
  */
 router.get('/me', authenticate, async (req, res) => {
   try {
-    if (config.isLocal) {
-      // In local mode, return dummy user
-      return res.json({
-        id: 'local-user',
-        username: 'admin',
-        nombre: 'Usuario Local',
-        role: 'admin',
-        is_active: true,
-      });
-    }
-
     const db = getDb();
 
     const user = await db.queryOne(

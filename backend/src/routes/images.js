@@ -3,19 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { authenticate } = require('../middleware/auth');
-const config = require('../config');
 
 const router = express.Router();
-
-// Solo disponible en modo cloud
-const cloudOnly = (req, res, next) => {
-  if (config.isLocal) {
-    return res.status(404).json({
-      error: 'Upload de imágenes a volumen solo disponible en modo cloud. En modo local use base64.',
-    });
-  }
-  next();
-};
 
 // Determinar directorio de uploads según entorno
 const getUploadDir = () => {
@@ -91,7 +80,7 @@ const upload = multer({
 });
 
 // Upload de imagen
-router.post('/upload', cloudOnly, authenticate, upload.single('file'), (req, res, next) => {
+router.post('/upload', authenticate, upload.single('file'), (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -128,7 +117,7 @@ router.post('/upload', cloudOnly, authenticate, upload.single('file'), (req, res
 router.use('/uploads', express.static(getUploadDir()));
 
 // Eliminar imagen
-router.delete('/delete', cloudOnly, authenticate, async (req, res, next) => {
+router.delete('/delete', authenticate, async (req, res, next) => {
   try {
     const { path: imagePath } = req.body;
 
@@ -167,7 +156,7 @@ router.delete('/delete', cloudOnly, authenticate, async (req, res, next) => {
 });
 
 // Obtener información de imagen
-router.get('/info', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/info', authenticate, async (req, res, next) => {
   try {
     const { path: imagePath } = req.query;
 

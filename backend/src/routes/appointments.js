@@ -2,22 +2,11 @@ const express = require('express');
 const { getDb } = require('../database');
 const { authenticate } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validate');
-const config = require('../config');
 
 const router = express.Router();
 
-// Solo disponible en modo cloud
-const cloudOnly = (req, res, next) => {
-  if (config.isLocal) {
-    return res.status(404).json({
-      error: 'Calendario de citas solo disponible en modo cloud',
-    });
-  }
-  next();
-};
-
 // Listar citas con filtros opcionales
-router.get('/', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
   try {
     const { fecha_desde, fecha_hasta, paciente_id, estado, doctor_id } = req.query;
     const db = getDb();
@@ -87,7 +76,7 @@ router.get('/', cloudOnly, authenticate, async (req, res, next) => {
 });
 
 // Obtener cita por ID
-router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -282,7 +271,7 @@ router.put(
 );
 
 // Marcar cita como completada
-router.patch('/:id/complete', cloudOnly, authenticate, async (req, res, next) => {
+router.patch('/:id/complete', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -310,7 +299,7 @@ router.patch('/:id/complete', cloudOnly, authenticate, async (req, res, next) =>
 });
 
 // Cancelar cita
-router.patch('/:id/cancel', cloudOnly, authenticate, async (req, res, next) => {
+router.patch('/:id/cancel', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -338,7 +327,7 @@ router.patch('/:id/cancel', cloudOnly, authenticate, async (req, res, next) => {
 });
 
 // Eliminar cita (hard delete)
-router.delete('/:id', cloudOnly, authenticate, async (req, res, next) => {
+router.delete('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();

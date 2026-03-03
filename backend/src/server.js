@@ -63,8 +63,7 @@ app.use("/api/images", imagesRouter);
 // Health check
 app.get("/api/health", (req, res) => res.json({
   status: "ok",
-  mode: config.isLocal ? 'local' : 'cloud',
-  database: config.isLocal ? 'sqlite' : 'postgres',
+  database: 'postgres',
   env: config.env,
   timestamp: new Date().toISOString(),
 }));
@@ -73,48 +72,22 @@ app.get("/api/health", (req, res) => res.json({
 app.get("/api/debug/tables", async (req, res) => {
   try {
     const db = getDb();
-    
-    let data = {};
-    
-    if (config.isLocal) {
-      // SQLite query
-      data.users = db.db.exec("SELECT * FROM users")[0]?.values || [];
-      data.pacientes = db.db.exec("SELECT * FROM pacientes")[0]?.values || [];
-      data.sesiones = db.db.exec("SELECT * FROM sesiones")[0]?.values || [];
-    } else {
-      // PostgreSQL query
-      const usersResult = await db.pool.query("SELECT * FROM users");
-      const pacientesResult = await db.pool.query("SELECT * FROM pacientes");
-      const sesionesResult = await db.pool.query("SELECT * FROM sesiones");
-      
-      data.users = usersResult.rows;
-      data.pacientes = pacientesResult.rows;
-      data.sesiones = sesionesResult.rows;
-    }
-    
+
+    const usersResult = await db.pool.query("SELECT * FROM users");
+    const pacientesResult = await db.pool.query("SELECT * FROM pacientes");
+    const sesionesResult = await db.pool.query("SELECT * FROM sesiones");
+
     res.json({
       success: true,
-      database: config.isLocal ? 'SQLite' : 'PostgreSQL',
+      database: 'PostgreSQL',
       tables: {
-        users: {
-          count: data.users.length,
-          data: data.users
-        },
-        pacientes: {
-          count: data.pacientes.length,
-          data: data.pacientes
-        },
-        sesiones: {
-          count: data.sesiones.length,
-          data: data.sesiones
-        }
+        users: { count: usersResult.rows.length, data: usersResult.rows },
+        pacientes: { count: pacientesResult.rows.length, data: pacientesResult.rows },
+        sesiones: { count: sesionesResult.rows.length, data: sesionesResult.rows },
       }
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -145,7 +118,7 @@ initDb().then(() => {
     console.log("");
     console.log(`Puerto:         ${config.server.port}`);
     console.log(`Environment:    ${config.env}`);
-    console.log(`Database Mode:  ${config.isLocal ? 'LOCAL (sql.js)' : 'CLOUD (PostgreSQL)'}`);
+    console.log(`Database Mode:  PostgreSQL`);
     console.log("");
     console.log(`Acceso local:   http://localhost:${config.server.port}`);
     console.log(`Acceso en red:  http://[IP-DE-ESTA-PC]:${config.server.port}`);
