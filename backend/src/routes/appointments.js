@@ -109,7 +109,6 @@ router.get('/:id', authenticate, async (req, res, next) => {
 // Crear nueva cita
 router.post(
   '/',
-  cloudOnly,
   authenticate,
   validate(schemas.createAppointment),
   async (req, res, next) => {
@@ -215,7 +214,6 @@ router.post(
 // Actualizar cita
 router.put(
   '/:id',
-  cloudOnly,
   authenticate,
   validate(schemas.updateAppointment),
   async (req, res, next) => {
