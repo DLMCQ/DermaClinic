@@ -57,7 +57,6 @@ router.get('/:id', authenticate, async (req, res, next) => {
 // Crear nuevo usuario (solo admin)
 router.post(
   '/',
-  cloudOnly,
   authenticate,
   requireRole('admin'),
   validate(schemas.createUser),
@@ -98,7 +97,6 @@ router.post(
 // Actualizar usuario (admin o el mismo usuario)
 router.put(
   '/:id',
-  cloudOnly,
   authenticate,
   validate(schemas.updateUser),
   async (req, res, next) => {
