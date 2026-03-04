@@ -115,7 +115,7 @@ export const api = {
   getDashboardStats: () => request("GET", "/dashboard/stats"),
   getDashboardActivity: (limit = 10) => request("GET", `/dashboard/activity?limit=${limit}`),
 
-  // Citas (solo modo cloud)
+  // Citas
   getAppointments: (params = {}) => {
     const q = new URLSearchParams(params).toString();
     return request("GET", `/appointments${q ? "?" + q : ""}`);
