@@ -1,50 +1,35 @@
 const express = require('express');
 const { getDb } = require('../database');
-const { hashPassword, comparePassword } = require('../utils/password');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 
-/**
- * POST /api/auth/login
- * Authenticate user and return tokens
- */
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+      return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
     }
 
     const db = getDb();
 
-    // Find user by username
     const user = await db.queryOne(
-      'SELECT * FROM users WHERE username = ? AND is_active = ?',
-      [username.toLowerCase(), 1]
+      'SELECT * FROM users WHERE username = ?',
+      [username.toLowerCase()]
     );
 
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
     }
 
-    // Verify password
-    const passwordMatch = await comparePassword(password, user.password_hash);
-
-    if (!passwordMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // Store refresh token in database
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 8); // 8 days
+    expiresAt.setDate(expiresAt.getDate() + 8);
 
-    // Limpiar tokens viejos o expirados del usuario antes de insertar
     await db.execute(
       'DELETE FROM refresh_tokens WHERE user_id = ? OR expires_at <= ?',
       [user.id, new Date().toISOString()]
@@ -55,8 +40,7 @@ router.post('/login', async (req, res) => {
       [user.id, refreshToken, expiresAt.toISOString()]
     );
 
-    // Return user (without password) and tokens
-    const { password_hash, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
 
     res.json({
       user: userWithoutPassword,
@@ -65,23 +49,19 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-/**
- * POST /api/auth/refresh
- * Refresh access token using refresh token
- */
+// POST /api/auth/refresh
 router.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({ error: 'Refresh token is required' });
+      return res.status(400).json({ error: 'Refresh token requerido' });
     }
 
-    // Verify refresh token
     let decoded;
     try {
       decoded = verifyRefreshToken(refreshToken);
@@ -91,84 +71,69 @@ router.post('/refresh', async (req, res) => {
 
     const db = getDb();
 
-    // Check if refresh token exists and is not expired
     const tokenRecord = await db.queryOne(
       'SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > ?',
       [refreshToken, new Date().toISOString()]
     );
 
     if (!tokenRecord) {
-      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+      return res.status(401).json({ error: 'Token inválido o expirado' });
     }
 
-    // Get user
     const user = await db.queryOne(
-      'SELECT * FROM users WHERE id = ? AND is_active = ?',
-      [decoded.userId, 1]
+      'SELECT * FROM users WHERE id = ?',
+      [decoded.userId]
     );
 
     if (!user) {
-      return res.status(401).json({ error: 'User not found or inactive' });
+      return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
-    // Generate new access token
     const accessToken = generateAccessToken(user);
-
     res.json({ accessToken });
   } catch (err) {
     console.error('Refresh error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-/**
- * POST /api/auth/logout
- * Logout user (invalidate refresh token)
- */
+// POST /api/auth/logout
 router.post('/logout', async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({ error: 'Refresh token is required' });
+      return res.status(400).json({ error: 'Refresh token requerido' });
     }
 
     const db = getDb();
-
-    // Delete refresh token from database
-    await db.execute(
-      'DELETE FROM refresh_tokens WHERE token = ?',
-      [refreshToken]
-    );
+    await db.execute('DELETE FROM refresh_tokens WHERE token = ?', [refreshToken]);
 
     res.json({ ok: true });
   } catch (err) {
     console.error('Logout error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-/**
- * GET /api/auth/me
- * Get current authenticated user
- */
+// GET /api/auth/me
 router.get('/me', authenticate, async (req, res) => {
   try {
     const db = getDb();
 
     const user = await db.queryOne(
-      'SELECT id, username, nombre, role, is_active, created_at FROM users WHERE id = ?',
+      'SELECT id, username, nombre, role FROM users WHERE id = ?',
       [req.user.userId]
     );
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
     res.json(user);
   } catch (err) {
     console.error('Get current user error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 

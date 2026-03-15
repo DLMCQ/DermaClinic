@@ -1,16 +1,12 @@
 -- Users and authentication tables
--- MySQL version
+-- Simplified: plain text password, no email, no timestamps
 
 CREATE TABLE IF NOT EXISTS users (
   id CHAR(36) NOT NULL,
   username VARCHAR(255) NOT NULL,
-  email VARCHAR(255),
-  password_hash VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
   nombre VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL,
-  is_active TINYINT(1) DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_username (username),
   CONSTRAINT chk_users_role CHECK (role IN ('admin', 'doctor'))
