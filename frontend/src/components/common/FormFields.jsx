@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { C, inputStyle } from "../../utils/theme";
-import { toBase64 } from "../../utils/helpers";
+import { api } from "../../utils/api";
 
 export function Field({ label, children }) {
   return (
@@ -73,8 +73,11 @@ export function Select({ label, value, onChange, options, required }) {
   );
 }
 
-export function ImageUpload({ label, value, onChange }) {
+export function ImageUpload({ label, value, onChange, uploadType = "general" }) {
   const ref = useRef();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
+
   const handle = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -82,18 +85,29 @@ export function ImageUpload({ label, value, onChange }) {
       alert("La imagen no puede superar 5MB");
       return;
     }
-    const b64 = await toBase64(file);
-    onChange(b64);
+    setUploading(true);
+    setError(null);
+    try {
+      const result = await api.uploadImage(file, uploadType);
+      onChange(result.url);
+    } catch (err) {
+      setError("Error al subir la imagen");
+      console.error(err);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
+
   return (
     <Field label={label}>
       <div
-        onClick={() => ref.current.click()}
+        onClick={() => !uploading && ref.current.click()}
         style={{
-          border: `2px dashed ${C.border}`,
+          border: `2px dashed ${error ? C.danger : C.border}`,
           borderRadius: 10,
           padding: 12,
-          cursor: "pointer",
+          cursor: uploading ? "wait" : "pointer",
           textAlign: "center",
           minHeight: value ? "auto" : 80,
           display: "flex",
@@ -101,9 +115,12 @@ export function ImageUpload({ label, value, onChange }) {
           justifyContent: "center",
           flexDirection: "column",
           transition: "border-color 0.2s",
+          opacity: uploading ? 0.7 : 1,
         }}
       >
-        {value ? (
+        {uploading ? (
+          <div style={{ color: C.muted, fontSize: 13 }}>Subiendo imagen...</div>
+        ) : value ? (
           <img
             src={value}
             alt=""
@@ -115,7 +132,7 @@ export function ImageUpload({ label, value, onChange }) {
               📷
             </div>
             <div style={{ color: C.muted, fontSize: 12 }}>
-              Click para subir imagen (max 5MB)
+              {error || "Click para subir imagen (max 5MB)"}
             </div>
           </>
         )}
@@ -127,7 +144,7 @@ export function ImageUpload({ label, value, onChange }) {
         style={{ display: "none" }}
         onChange={handle}
       />
-      {value && (
+      {value && !uploading && (
         <button
           onClick={() => onChange(null)}
           style={{

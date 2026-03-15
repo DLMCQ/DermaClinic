@@ -63,7 +63,7 @@ app.use("/api/images", imagesRouter);
 // Health check
 app.get("/api/health", (req, res) => res.json({
   status: "ok",
-  database: 'postgres',
+  database: 'mysql',
   env: config.env,
   timestamp: new Date().toISOString(),
 }));
@@ -73,17 +73,17 @@ app.get("/api/debug/tables", async (req, res) => {
   try {
     const db = getDb();
 
-    const usersResult = await db.pool.query("SELECT * FROM users");
-    const pacientesResult = await db.pool.query("SELECT * FROM pacientes");
-    const sesionesResult = await db.pool.query("SELECT * FROM sesiones");
+    const usersResult = await db.query("SELECT * FROM users");
+    const pacientesResult = await db.query("SELECT * FROM pacientes");
+    const sesionesResult = await db.query("SELECT * FROM sesiones");
 
     res.json({
       success: true,
-      database: 'PostgreSQL',
+      database: 'MySQL',
       tables: {
-        users: { count: usersResult.rows.length, data: usersResult.rows },
-        pacientes: { count: pacientesResult.rows.length, data: pacientesResult.rows },
-        sesiones: { count: sesionesResult.rows.length, data: sesionesResult.rows },
+        users: { count: usersResult.length, data: usersResult },
+        pacientes: { count: pacientesResult.length, data: pacientesResult },
+        sesiones: { count: sesionesResult.length, data: sesionesResult },
       }
     });
   } catch (err) {
@@ -118,7 +118,7 @@ initDb().then(() => {
     console.log("");
     console.log(`Puerto:         ${config.server.port}`);
     console.log(`Environment:    ${config.env}`);
-    console.log(`Database Mode:  PostgreSQL`);
+    console.log(`Database Mode:  MySQL`);
     console.log("");
     console.log(`Acceso local:   http://localhost:${config.server.port}`);
     console.log(`Acceso en red:  http://[IP-DE-ESTA-PC]:${config.server.port}`);

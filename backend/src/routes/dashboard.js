@@ -22,13 +22,13 @@ router.get('/stats', authenticate, async (req, res, next) => {
       db.queryOne(`
         SELECT COUNT(*) as count
         FROM pacientes
-        WHERE created_at >= date_trunc('month', CURRENT_DATE)
+        WHERE created_at >= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')
       `),
       db.queryOne('SELECT COUNT(*) as count FROM sesiones'),
       db.queryOne(`
         SELECT COUNT(*) as count
         FROM sesiones
-        WHERE created_at >= date_trunc('month', CURRENT_DATE)
+        WHERE created_at >= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')
       `),
       db.queryOne(`
         SELECT COUNT(*) as count
@@ -84,17 +84,17 @@ router.get('/stats/range', authenticate, async (req, res, next) => {
       db.queryOne(`
         SELECT COUNT(*) as count
         FROM sesiones
-        WHERE fecha BETWEEN $1 AND $2
+        WHERE fecha BETWEEN ? AND ?
       `, [fecha_desde, fecha_hasta]),
       db.queryOne(`
         SELECT COUNT(*) as count
         FROM pacientes
-        WHERE created_at::date BETWEEN $1 AND $2
+        WHERE DATE(created_at) BETWEEN ? AND ?
       `, [fecha_desde, fecha_hasta]),
       db.query(`
         SELECT tratamiento, COUNT(*) as count
         FROM sesiones
-        WHERE fecha BETWEEN $1 AND $2
+        WHERE fecha BETWEEN ? AND ?
         GROUP BY tratamiento
         ORDER BY count DESC
       `, [fecha_desde, fecha_hasta])
@@ -130,7 +130,7 @@ router.get('/activity', authenticate, async (req, res, next) => {
       FROM sesiones s
       JOIN pacientes p ON s.paciente_id = p.id
       ORDER BY s.created_at DESC
-      LIMIT $1
+      LIMIT ?
     `, [parseInt(limit)]);
 
     res.json(recentActivity);

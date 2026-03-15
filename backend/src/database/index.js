@@ -13,9 +13,9 @@ async function initDb() {
   }
 
   try {
-    console.log('🗄️  Initializing database (PostgreSQL)...');
-    const PostgresAdapter = require('./postgresAdapter');
-    db = new PostgresAdapter(config.database.url);
+    console.log('🗄️  Initializing database (MySQL)...');
+    const MySQLAdapter = require('./mysqlAdapter');
+    db = new MySQLAdapter(config.database.url);
 
     await db.connect();
     await db.migrate();

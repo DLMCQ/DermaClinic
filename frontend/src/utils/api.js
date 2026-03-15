@@ -115,6 +115,24 @@ export const api = {
   getDashboardStats: () => request("GET", "/dashboard/stats"),
   getDashboardActivity: (limit = 10) => request("GET", `/dashboard/activity?limit=${limit}`),
 
+  // Imágenes (Cloudinary)
+  uploadImage: async (file, type = 'general') => {
+    const token = localStorage.getItem('accessToken');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const res = await fetch(`${BASE}/api/images/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error subiendo imagen');
+    return data;
+  },
+
   // Citas
   getAppointments: (params = {}) => {
     const q = new URLSearchParams(params).toString();

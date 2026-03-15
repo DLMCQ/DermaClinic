@@ -72,11 +72,13 @@ export function SessionForm({ session, onSave, onClose, loading }) {
           label="📷 Foto ANTES"
           value={form.imagen_antes}
           onChange={(v) => setForm((f) => ({ ...f, imagen_antes: v }))}
+          uploadType="session_before"
         />
         <ImageUpload
           label="📷 Foto DESPUÉS"
           value={form.imagen_despues}
           onChange={(v) => setForm((f) => ({ ...f, imagen_despues: v }))}
+          uploadType="session_after"
         />
       </div>
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>

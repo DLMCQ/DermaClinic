@@ -56,6 +56,7 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
             label="Foto de la paciente"
             value={form.foto_url}
             onChange={(v) => setForm((f) => ({ ...f, foto_url: v }))}
+            uploadType="patient"
           />
         </div>
         <Input label="Nombre completo" value={form.nombre} onChange={set("nombre")} required />
