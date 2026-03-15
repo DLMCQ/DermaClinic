@@ -78,11 +78,16 @@ class MySQLAdapter {
       console.log(`🔄 Running migration: ${file}`);
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
 
-      // Split on semicolons to execute each statement separately
+      // Split on semicolons and strip comment lines from each statement
       const statements = sql
         .split(';')
-        .map(s => s.trim())
-        .filter(s => s.length > 0 && !s.startsWith('--'));
+        .map(s =>
+          s.split('\n')
+            .filter(line => !line.trim().startsWith('--'))
+            .join('\n')
+            .trim()
+        )
+        .filter(s => s.length > 0);
 
       try {
         for (const statement of statements) {
