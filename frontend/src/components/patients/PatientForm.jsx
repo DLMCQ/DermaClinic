@@ -33,14 +33,30 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const handleSubmit = () => {
+    if (!form.nombre.trim() || !form.dni.trim()) {
+      alert("Nombre y DNI son obligatorios");
+      return;
+    }
+    onSave(form);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <div>
+    <div onKeyDown={handleKeyDown}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
         <div style={{ gridColumn: "1 / -1" }}>
           <ImageUpload
             label="Foto de la paciente"
             value={form.foto_url}
             onChange={(v) => setForm((f) => ({ ...f, foto_url: v }))}
+            uploadType="patient"
           />
         </div>
         <Input label="Nombre completo" value={form.nombre} onChange={set("nombre")} required />
@@ -64,16 +80,7 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
         <Btn variant="ghost" onClick={onClose} disabled={loading}>
           Cancelar
         </Btn>
-        <Btn
-          disabled={loading}
-          onClick={() => {
-            if (!form.nombre.trim() || !form.dni.trim()) {
-              alert("Nombre y DNI son obligatorios");
-              return;
-            }
-            onSave(form);
-          }}
-        >
+        <Btn disabled={loading} onClick={handleSubmit}>
           {loading ? "Guardando..." : patient ? "Guardar cambios" : "Crear paciente"}
         </Btn>
       </div>

@@ -1,16 +1,10 @@
 const { verifyAccessToken } = require('../utils/jwt');
-const config = require('../config');
 
 /**
  * Authentication middleware
  * Verifies JWT token and attaches user to request
  */
 function authenticate(req, res, next) {
-  // Skip authentication in local mode (backward compatibility)
-  if (config.isLocal) {
-    return next();
-  }
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -33,10 +27,6 @@ function authenticate(req, res, next) {
  * Attaches user if token is valid, but doesn't block request
  */
 function optionalAuth(req, res, next) {
-  if (config.isLocal) {
-    return next();
-  }
-
   const authHeader = req.headers.authorization;
 
   if (authHeader && authHeader.startsWith('Bearer ')) {

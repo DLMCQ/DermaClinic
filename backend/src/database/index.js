@@ -3,7 +3,7 @@ const config = require('../config');
 let db = null;
 
 /**
- * Initialize database connection based on DATABASE_MODE
+ * Initialize database connection (PostgreSQL)
  * @returns {Promise<DatabaseAdapter>}
  */
 async function initDb() {
@@ -13,20 +13,14 @@ async function initDb() {
   }
 
   try {
-    if (config.isLocal) {
-      console.log('🗄️  Initializing LOCAL database (sql.js)...');
-      const SqliteAdapter = require('./sqliteAdapter');
-      db = new SqliteAdapter(config.database.localPath);
-    } else {
-      console.log('🗄️  Initializing CLOUD database (PostgreSQL)...');
-      const PostgresAdapter = require('./postgresAdapter');
-      db = new PostgresAdapter(config.database.url);
-    }
+    console.log('🗄️  Initializing database (MySQL)...');
+    const MySQLAdapter = require('./mysqlAdapter');
+    db = new MySQLAdapter(config.database.url);
 
     await db.connect();
     await db.migrate();
 
-    console.log(`✅ Database initialized successfully (${config.isLocal ? 'LOCAL' : 'CLOUD'})`);
+    console.log('✅ Database initialized successfully');
     return db;
   } catch (err) {
     console.error('❌ Database initialization failed:', err);

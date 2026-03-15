@@ -1,12 +1,10 @@
 require('dotenv').config();
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isLocal = process.env.DATABASE_MODE === 'local';
 
 module.exports = {
   env: process.env.NODE_ENV || 'development',
   isProduction,
-  isLocal,
 
   server: {
     port: parseInt(process.env.PORT) || 3001,
@@ -15,7 +13,6 @@ module.exports = {
 
   database: {
     url: process.env.DATABASE_URL,
-    localPath: process.env.LOCAL_DB_PATH || './data/dermaclinic.db',
   },
 
   jwt: {

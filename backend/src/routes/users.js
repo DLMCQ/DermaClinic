@@ -1,25 +1,14 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database');
 const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roleCheck');
 const { validate, schemas } = require('../middleware/validate');
 const { hashPassword } = require('../utils/password');
-const config = require('../config');
-
 const router = express.Router();
 
-// Solo disponible en modo cloud
-const cloudOnly = (req, res, next) => {
-  if (config.isLocal) {
-    return res.status(404).json({
-      error: 'Endpoint solo disponible en modo cloud',
-    });
-  }
-  next();
-};
-
 // Listar todos los usuarios (solo admin)
-router.get('/', cloudOnly, authenticate, requireRole('admin'), async (req, res, next) => {
+router.get('/', authenticate, requireRole('admin'), async (req, res, next) => {
   try {
     const db = getDb();
 
@@ -36,7 +25,7 @@ router.get('/', cloudOnly, authenticate, requireRole('admin'), async (req, res, 
 });
 
 // Obtener un usuario por ID (admin o el mismo usuario)
-router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -51,7 +40,7 @@ router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
     const user = await db.queryOne(`
       SELECT id, email, nombre, role, is_active, created_at, updated_at
       FROM users
-      WHERE id = $1
+      WHERE id = ?
     `, [id]);
 
     if (!user) {
@@ -69,7 +58,6 @@ router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
 // Crear nuevo usuario (solo admin)
 router.post(
   '/',
-  cloudOnly,
   authenticate,
   requireRole('admin'),
   validate(schemas.createUser),
@@ -80,7 +68,7 @@ router.post(
 
       // Verificar que el username no exista
       const existing = await db.queryOne(
-        'SELECT id FROM users WHERE username = $1',
+        'SELECT id FROM users WHERE username = ?',
         [username]
       );
 
@@ -93,12 +81,17 @@ router.post(
       // Hash password
       const password_hash = await hashPassword(password);
 
-      // Crear usuario
-      const user = await db.queryOne(`
-        INSERT INTO users (username, password_hash, nombre, role)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, username, nombre, role, is_active, created_at
-      `, [username, password_hash, nombre, role]);
+      // Crear usuario con UUID generado en la app
+      const id = uuidv4();
+      await db.execute(
+        'INSERT INTO users (id, username, password_hash, nombre, role) VALUES (?, ?, ?, ?, ?)',
+        [id, username, password_hash, nombre, role]
+      );
+
+      const user = await db.queryOne(
+        'SELECT id, username, nombre, role, is_active, created_at FROM users WHERE id = ?',
+        [id]
+      );
 
       res.status(201).json(user);
     } catch (error) {
@@ -110,7 +103,6 @@ router.post(
 // Actualizar usuario (admin o el mismo usuario)
 router.put(
   '/:id',
-  cloudOnly,
   authenticate,
   validate(schemas.updateUser),
   async (req, res, next) => {
@@ -150,21 +142,25 @@ router.put(
         });
       }
 
-      const setClause = fields.map((field, i) => `${field} = $${i + 2}`).join(', ');
-      const values = [id, ...fields.map(f => updates[f])];
-
-      const user = await db.queryOne(`
-        UPDATE users
-        SET ${setClause}, updated_at = NOW()
-        WHERE id = $1
-        RETURNING id, email, nombre, role, is_active, updated_at
-      `, values);
-
-      if (!user) {
-        return res.status(404).json({
-          error: 'Usuario no encontrado',
-        });
+      // Verificar que el usuario existe
+      const existing = await db.queryOne('SELECT id FROM users WHERE id = ?', [id]);
+      if (!existing) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
       }
+
+      // MySQL: params van en orden de SET, id al final para WHERE
+      const setClause = fields.map(field => `${field} = ?`).join(', ');
+      const values = [...fields.map(f => updates[f]), id];
+
+      await db.execute(
+        `UPDATE users SET ${setClause}, updated_at = NOW() WHERE id = ?`,
+        values
+      );
+
+      const user = await db.queryOne(
+        'SELECT id, email, nombre, role, is_active, updated_at FROM users WHERE id = ?',
+        [id]
+      );
 
       res.json(user);
     } catch (error) {
@@ -173,8 +169,8 @@ router.put(
   }
 );
 
-// Desactivar usuario (solo admin) - soft delete
-router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req, res, next) => {
+// Desactivar usuario (solo admin) - hard delete
+router.delete('/:id', authenticate, requireRole('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -186,17 +182,18 @@ router.delete('/:id', cloudOnly, authenticate, requireRole('admin'), async (req,
       });
     }
 
-    const user = await db.queryOne(`
-      DELETE FROM users
-      WHERE id = $1
-      RETURNING id, email, nombre
-    `, [id]);
+    const user = await db.queryOne(
+      'SELECT id, email, nombre FROM users WHERE id = ?',
+      [id]
+    );
 
     if (!user) {
       return res.status(404).json({
         error: 'Usuario no encontrado',
       });
     }
+
+    await db.execute('DELETE FROM users WHERE id = ?', [id]);
 
     res.json({
       message: 'Usuario eliminado exitosamente',

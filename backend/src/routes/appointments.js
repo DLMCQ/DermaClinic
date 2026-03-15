@@ -1,23 +1,13 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database');
 const { authenticate } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validate');
-const config = require('../config');
 
 const router = express.Router();
 
-// Solo disponible en modo cloud
-const cloudOnly = (req, res, next) => {
-  if (config.isLocal) {
-    return res.status(404).json({
-      error: 'Calendario de citas solo disponible en modo cloud',
-    });
-  }
-  next();
-};
-
 // Listar citas con filtros opcionales
-router.get('/', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
   try {
     const { fecha_desde, fecha_hasta, paciente_id, estado, doctor_id } = req.query;
     const db = getDb();
@@ -45,36 +35,30 @@ router.get('/', cloudOnly, authenticate, async (req, res, next) => {
     `;
 
     const params = [];
-    let paramIndex = 1;
 
     if (fecha_desde) {
-      query += ` AND a.fecha_hora >= $${paramIndex}`;
+      query += ` AND a.fecha_hora >= ?`;
       params.push(fecha_desde);
-      paramIndex++;
     }
 
     if (fecha_hasta) {
-      query += ` AND a.fecha_hora <= $${paramIndex}`;
+      query += ` AND a.fecha_hora <= ?`;
       params.push(fecha_hasta);
-      paramIndex++;
     }
 
     if (paciente_id) {
-      query += ` AND a.paciente_id = $${paramIndex}`;
+      query += ` AND a.paciente_id = ?`;
       params.push(paciente_id);
-      paramIndex++;
     }
 
     if (estado) {
-      query += ` AND a.estado = $${paramIndex}`;
+      query += ` AND a.estado = ?`;
       params.push(estado);
-      paramIndex++;
     }
 
     if (doctor_id) {
-      query += ` AND a.doctor_id = $${paramIndex}`;
+      query += ` AND a.doctor_id = ?`;
       params.push(doctor_id);
-      paramIndex++;
     }
 
     query += ' ORDER BY a.fecha_hora ASC';
@@ -87,7 +71,7 @@ router.get('/', cloudOnly, authenticate, async (req, res, next) => {
 });
 
 // Obtener cita por ID
-router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
@@ -102,7 +86,7 @@ router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
       FROM appointments a
       JOIN pacientes p ON a.paciente_id = p.id
       LEFT JOIN users u ON a.doctor_id = u.id
-      WHERE a.id = $1
+      WHERE a.id = ?
     `, [id]);
 
     if (!appointment) {
@@ -120,7 +104,6 @@ router.get('/:id', cloudOnly, authenticate, async (req, res, next) => {
 // Crear nueva cita
 router.post(
   '/',
-  cloudOnly,
   authenticate,
   validate(schemas.createAppointment),
   async (req, res, next) => {
@@ -139,7 +122,7 @@ router.post(
 
       // Verificar que el paciente existe
       const patient = await db.queryOne(
-        'SELECT id FROM pacientes WHERE id = $1',
+        'SELECT id FROM pacientes WHERE id = ?',
         [paciente_id]
       );
 
@@ -152,8 +135,8 @@ router.post(
       // Verificar que el doctor existe (si se especifica)
       if (doctor_id) {
         const doctor = await db.queryOne(
-          'SELECT id FROM users WHERE id = $1 AND role IN ($2, $3)',
-          [doctor_id, 'doctor', 'admin']
+          "SELECT id FROM users WHERE id = ? AND role IN ('doctor', 'admin')",
+          [doctor_id]
         );
 
         if (!doctor) {
@@ -163,27 +146,26 @@ router.post(
         }
       }
 
-      // Verificar conflictos de horario (opcional - por ahora solo advertencia)
+      // Verificar conflictos de horario (advertencia)
       const conflicts = await db.query(`
         SELECT id, fecha_hora, duracion_minutos
         FROM appointments
-        WHERE doctor_id = $1
+        WHERE doctor_id = ?
           AND estado NOT IN ('cancelada', 'completada')
-          AND fecha_hora::date = $2::date
-          AND (
-            (fecha_hora <= $2 AND fecha_hora + (duracion_minutos || ' minutes')::interval > $2)
-            OR
-            (fecha_hora < $2 + ($3 || ' minutes')::interval AND fecha_hora >= $2)
-          )
-      `, [doctor_id || req.user.userId, fecha_hora, duracion_minutos]);
+          AND DATE(fecha_hora) = DATE(?)
+          AND fecha_hora < DATE_ADD(?, INTERVAL ? MINUTE)
+          AND DATE_ADD(fecha_hora, INTERVAL duracion_minutos MINUTE) > ?
+      `, [doctor_id || req.user.userId, fecha_hora, fecha_hora, duracion_minutos, fecha_hora]);
 
       if (conflicts.length > 0) {
         console.warn('Advertencia: Conflicto de horario detectado', conflicts);
       }
 
-      // Crear cita
-      const appointment = await db.queryOne(`
+      // Crear cita con UUID generado en la app
+      const id = uuidv4();
+      await db.execute(`
         INSERT INTO appointments (
+          id,
           paciente_id,
           doctor_id,
           fecha_hora,
@@ -192,9 +174,9 @@ router.post(
           notas,
           estado
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING *
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `, [
+        id,
         paciente_id,
         doctor_id || req.user.userId,
         fecha_hora,
@@ -213,8 +195,8 @@ router.post(
         FROM appointments a
         JOIN pacientes p ON a.paciente_id = p.id
         LEFT JOIN users u ON a.doctor_id = u.id
-        WHERE a.id = $1
-      `, [appointment.id]);
+        WHERE a.id = ?
+      `, [id]);
 
       res.status(201).json(fullAppointment);
     } catch (error) {
@@ -226,7 +208,6 @@ router.post(
 // Actualizar cita
 router.put(
   '/:id',
-  cloudOnly,
   authenticate,
   validate(schemas.updateAppointment),
   async (req, res, next) => {
@@ -236,7 +217,7 @@ router.put(
       const db = getDb();
 
       // Verificar que la cita existe
-      const existing = await db.queryOne('SELECT * FROM appointments WHERE id = $1', [id]);
+      const existing = await db.queryOne('SELECT id FROM appointments WHERE id = ?', [id]);
 
       if (!existing) {
         return res.status(404).json({
@@ -252,15 +233,14 @@ router.put(
         });
       }
 
-      const setClause = fields.map((field, i) => `${field} = $${i + 2}`).join(', ');
-      const values = [id, ...fields.map(f => updates[f])];
+      // MySQL: params en orden de SET, id al final para WHERE
+      const setClause = fields.map(field => `${field} = ?`).join(', ');
+      const values = [...fields.map(f => updates[f]), id];
 
-      const appointment = await db.queryOne(`
-        UPDATE appointments
-        SET ${setClause}, updated_at = NOW()
-        WHERE id = $1
-        RETURNING *
-      `, values);
+      await db.execute(
+        `UPDATE appointments SET ${setClause}, updated_at = NOW() WHERE id = ?`,
+        values
+      );
 
       // Obtener datos completos
       const fullAppointment = await db.queryOne(`
@@ -271,7 +251,7 @@ router.put(
         FROM appointments a
         JOIN pacientes p ON a.paciente_id = p.id
         LEFT JOIN users u ON a.doctor_id = u.id
-        WHERE a.id = $1
+        WHERE a.id = ?
       `, [id]);
 
       res.json(fullAppointment);
@@ -282,23 +262,25 @@ router.put(
 );
 
 // Marcar cita como completada
-router.patch('/:id/complete', cloudOnly, authenticate, async (req, res, next) => {
+router.patch('/:id/complete', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
 
-    const appointment = await db.queryOne(`
-      UPDATE appointments
-      SET estado = 'completada', updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
-    `, [id]);
+    const existing = await db.queryOne('SELECT id FROM appointments WHERE id = ?', [id]);
 
-    if (!appointment) {
+    if (!existing) {
       return res.status(404).json({
         error: 'Cita no encontrada',
       });
     }
+
+    await db.execute(
+      `UPDATE appointments SET estado = 'completada', updated_at = NOW() WHERE id = ?`,
+      [id]
+    );
+
+    const appointment = await db.queryOne('SELECT * FROM appointments WHERE id = ?', [id]);
 
     res.json({
       message: 'Cita marcada como completada',
@@ -310,23 +292,25 @@ router.patch('/:id/complete', cloudOnly, authenticate, async (req, res, next) =>
 });
 
 // Cancelar cita
-router.patch('/:id/cancel', cloudOnly, authenticate, async (req, res, next) => {
+router.patch('/:id/cancel', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
 
-    const appointment = await db.queryOne(`
-      UPDATE appointments
-      SET estado = 'cancelada', updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
-    `, [id]);
+    const existing = await db.queryOne('SELECT id FROM appointments WHERE id = ?', [id]);
 
-    if (!appointment) {
+    if (!existing) {
       return res.status(404).json({
         error: 'Cita no encontrada',
       });
     }
+
+    await db.execute(
+      `UPDATE appointments SET estado = 'cancelada', updated_at = NOW() WHERE id = ?`,
+      [id]
+    );
+
+    const appointment = await db.queryOne('SELECT * FROM appointments WHERE id = ?', [id]);
 
     res.json({
       message: 'Cita cancelada',
@@ -338,13 +322,13 @@ router.patch('/:id/cancel', cloudOnly, authenticate, async (req, res, next) => {
 });
 
 // Eliminar cita (hard delete)
-router.delete('/:id', cloudOnly, authenticate, async (req, res, next) => {
+router.delete('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const db = getDb();
 
     const appointment = await db.queryOne(
-      'DELETE FROM appointments WHERE id = $1 RETURNING id',
+      'SELECT id FROM appointments WHERE id = ?',
       [id]
     );
 
@@ -353,6 +337,8 @@ router.delete('/:id', cloudOnly, authenticate, async (req, res, next) => {
         error: 'Cita no encontrada',
       });
     }
+
+    await db.execute('DELETE FROM appointments WHERE id = ?', [id]);
 
     res.json({
       message: 'Cita eliminada exitosamente',

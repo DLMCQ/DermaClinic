@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const config = require('../config');
 
+
 // Helmet configuration (security headers)
 const helmetConfig = helmet({
   contentSecurityPolicy: config.isProduction ? undefined : false, // Disable in dev for easier debugging
@@ -26,7 +27,6 @@ const generalLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  skip: (req) => config.isLocal, // No rate limiting en modo local
   keyGenerator: getClientIp,
 });
 
@@ -39,7 +39,6 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => config.isLocal,
   keyGenerator: getClientIp,
 });
 

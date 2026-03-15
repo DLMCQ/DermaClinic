@@ -11,8 +11,27 @@ export function UserForm({ user, onSave, onClose, loading }) {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const handleSubmit = () => {
+    if (!form.username.trim() || !form.nombre.trim()) {
+      alert("Usuario y nombre son obligatorios");
+      return;
+    }
+    if (!user && !form.password.trim()) {
+      alert("Contraseña requerida para nuevo usuario");
+      return;
+    }
+    onSave(form);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <div>
+    <div onKeyDown={handleKeyDown}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
         <Input label="Usuario" value={form.username} onChange={set("username")} type="text" required />
         <Input label="Nombre completo" value={form.nombre} onChange={set("nombre")} required />
@@ -36,20 +55,7 @@ export function UserForm({ user, onSave, onClose, loading }) {
         <Btn variant="ghost" onClick={onClose} disabled={loading}>
           Cancelar
         </Btn>
-        <Btn
-          disabled={loading}
-          onClick={() => {
-            if (!form.username.trim() || !form.nombre.trim()) {
-              alert("Usuario y nombre son obligatorios");
-              return;
-            }
-            if (!user && !form.password.trim()) {
-              alert("Contraseña requerida para nuevo usuario");
-              return;
-            }
-            onSave(form);
-          }}
-        >
+        <Btn disabled={loading} onClick={handleSubmit}>
           {loading ? "Guardando..." : user ? "Guardar cambios" : "Crear usuario"}
         </Btn>
       </div>

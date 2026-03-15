@@ -3,8 +3,6 @@ const { getDb } = require('../database');
 const { hashPassword, comparePassword } = require('../utils/password');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
-const config = require('../config');
-
 const router = express.Router();
 
 /**
@@ -23,8 +21,8 @@ router.post('/login', async (req, res) => {
 
     // Find user by username
     const user = await db.queryOne(
-      'SELECT * FROM users WHERE username = $1 AND is_active = $2',
-      [username.toLowerCase(), true]
+      'SELECT * FROM users WHERE username = ? AND is_active = ?',
+      [username.toLowerCase(), 1]
     );
 
     if (!user) {
@@ -44,10 +42,16 @@ router.post('/login', async (req, res) => {
 
     // Store refresh token in database
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    expiresAt.setDate(expiresAt.getDate() + 8); // 8 days
+
+    // Limpiar tokens viejos o expirados del usuario antes de insertar
+    await db.execute(
+      'DELETE FROM refresh_tokens WHERE user_id = ? OR expires_at <= ?',
+      [user.id, new Date().toISOString()]
+    );
 
     await db.execute(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, refreshToken, expiresAt.toISOString()]
     );
 
@@ -89,7 +93,7 @@ router.post('/refresh', async (req, res) => {
 
     // Check if refresh token exists and is not expired
     const tokenRecord = await db.queryOne(
-      'SELECT * FROM refresh_tokens WHERE token = $1 AND expires_at > $2',
+      'SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > ?',
       [refreshToken, new Date().toISOString()]
     );
 
@@ -99,8 +103,8 @@ router.post('/refresh', async (req, res) => {
 
     // Get user
     const user = await db.queryOne(
-      'SELECT * FROM users WHERE id = $1 AND is_active = $2',
-      [decoded.userId, true]
+      'SELECT * FROM users WHERE id = ? AND is_active = ?',
+      [decoded.userId, 1]
     );
 
     if (!user) {
@@ -133,7 +137,7 @@ router.post('/logout', async (req, res) => {
 
     // Delete refresh token from database
     await db.execute(
-      'DELETE FROM refresh_tokens WHERE token = $1',
+      'DELETE FROM refresh_tokens WHERE token = ?',
       [refreshToken]
     );
 
@@ -150,21 +154,10 @@ router.post('/logout', async (req, res) => {
  */
 router.get('/me', authenticate, async (req, res) => {
   try {
-    if (config.isLocal) {
-      // In local mode, return dummy user
-      return res.json({
-        id: 'local-user',
-        username: 'admin',
-        nombre: 'Usuario Local',
-        role: 'admin',
-        is_active: true,
-      });
-    }
-
     const db = getDb();
 
     const user = await db.queryOne(
-      'SELECT id, username, nombre, role, is_active, created_at FROM users WHERE id = $1',
+      'SELECT id, username, nombre, role, is_active, created_at FROM users WHERE id = ?',
       [req.user.userId]
     );
 

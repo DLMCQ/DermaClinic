@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/es";
@@ -72,63 +73,71 @@ function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+    const handleSubmit = () => {
+    if (!form.paciente_id || !form.fecha_hora) {
+      alert("Paciente y fecha son obligatorios");
+      return;
+    }
+    onSave(form);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-        <div style={{ gridColumn: "1 / -1" }}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", color: C.goldLight, fontSize: 11, marginBottom: 6, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase" }}>
-              Paciente *
-            </label>
-            <select
-              value={form.paciente_id}
-              onChange={set("paciente_id")}
-              style={{ width: "100%", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: form.paciente_id ? C.text : C.muted, padding: "10px 14px", fontSize: 14, fontFamily: "inherit" }}
-            >
-              <option value="">Seleccionar paciente...</option>
-              {pacientes.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre} — DNI: {p.dni}</option>
-              ))}
-            </select>
+    <div onKeyDown={handleKeyDown}>
+      <div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", color: C.goldLight, fontSize: 11, marginBottom: 6, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase" }}>
+                Paciente *
+              </label>
+              <select
+                value={form.paciente_id}
+                onChange={set("paciente_id")}
+                style={{ width: "100%", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: form.paciente_id ? C.text : C.muted, padding: "10px 14px", fontSize: 14, fontFamily: "inherit" }}
+              >
+                <option value="">Seleccionar paciente...</option>
+                {pacientes.map((p) => (
+                  <option key={p.id} value={p.id}>{p.nombre} — DNI: {p.dni}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <Input label="Fecha y hora" value={form.fecha_hora} onChange={set("fecha_hora")} type="datetime-local" required />
+          <Input
+            label="Duración (minutos)"
+            value={form.duracion_minutos}
+            onChange={set("duracion_minutos")}
+            type="number"
+          />
+          <Select
+            label="Tratamiento planeado"
+            value={form.tratamiento_planeado}
+            onChange={set("tratamiento_planeado")}
+            options={TRATAMIENTOS}
+          />
+          <Select
+            label="Estado"
+            value={form.estado}
+            onChange={set("estado")}
+            options={ESTADOS}
+          />
+          <div style={{ gridColumn: "1 / -1" }}>
+            <Textarea label="Notas" value={form.notas} onChange={set("notas")} placeholder="Indicaciones, preparación..." />
           </div>
         </div>
-        <Input label="Fecha y hora" value={form.fecha_hora} onChange={set("fecha_hora")} type="datetime-local" required />
-        <Input
-          label="Duración (minutos)"
-          value={form.duracion_minutos}
-          onChange={set("duracion_minutos")}
-          type="number"
-        />
-        <Select
-          label="Tratamiento planeado"
-          value={form.tratamiento_planeado}
-          onChange={set("tratamiento_planeado")}
-          options={TRATAMIENTOS}
-        />
-        <Select
-          label="Estado"
-          value={form.estado}
-          onChange={set("estado")}
-          options={ESTADOS}
-        />
-        <div style={{ gridColumn: "1 / -1" }}>
-          <Textarea label="Notas" value={form.notas} onChange={set("notas")} placeholder="Indicaciones, preparación..." />
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+          <Btn variant="ghost" onClick={onClose} disabled={loading}>Cancelar</Btn>
+          <Btn disabled={loading} onClick={handleSubmit}>
+            {loading ? "Guardando..." : appointment ? "Guardar cambios" : "Crear cita"}
+          </Btn>
         </div>
-      </div>
-      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
-        <Btn variant="ghost" onClick={onClose} disabled={loading}>Cancelar</Btn>
-        <Btn
-          disabled={loading}
-          onClick={() => {
-            if (!form.paciente_id || !form.fecha_hora) {
-              alert("Paciente y fecha son obligatorios");
-              return;
-            }
-            onSave(form);
-          }}
-        >
-          {loading ? "Guardando..." : appointment ? "Guardar cambios" : "Crear cita"}
-        </Btn>
       </div>
     </div>
   );
@@ -184,6 +193,7 @@ function AppointmentDetail({ appointment, onEdit, onCancel, onDelete, onClose, l
 }
 
 export default function AppointmentsPage() {
+  const location = useLocation();
   const [appointments, setAppointments] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +202,7 @@ export default function AppointmentsPage() {
   const [modal, setModal] = useState(null);
   const [selectedApt, setSelectedApt] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [preselectedPaciente, setPreselectedPaciente] = useState(null);
   const [currentView, setCurrentView] = useState(Views.WEEK);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCloudMode, setIsCloudMode] = useState(true);
@@ -218,6 +229,15 @@ export default function AppointmentsPage() {
     loadAppointments();
     api.getPacientes().then(setPacientes).catch(() => {});
   }, [loadAppointments]);
+
+  // Abrir modal con paciente preseleccionado si viene de PatientsPage
+  useEffect(() => {
+    if (location.state?.paciente_id && !loading) {
+      setPreselectedPaciente(location.state.paciente_id);
+      setSelectedSlot(new Date());
+      setModal("new");
+    }
+  }, [location.state, loading]);
 
   const events = appointments.map((apt) => ({
     id: apt.id,
@@ -246,6 +266,7 @@ export default function AppointmentsPage() {
   };
 
   const handleSelectSlot = ({ start }) => {
+    setPreselectedPaciente(null);
     setSelectedSlot(start);
     setModal("new");
   };
@@ -265,6 +286,7 @@ export default function AppointmentsPage() {
       }
       setModal(null);
       setSelectedApt(null);
+      setPreselectedPaciente(null);
     } catch (e) {
       showToast(e.message, "error");
     } finally {
@@ -338,7 +360,7 @@ export default function AppointmentsPage() {
             {appointments.length} cita{appointments.length !== 1 ? "s" : ""} · Click en un slot para crear, click en evento para ver detalles
           </p>
         </div>
-        <Btn onClick={() => { setSelectedSlot(new Date()); setModal("new"); }}>
+        <Btn onClick={() => { setPreselectedPaciente(null); setSelectedSlot(new Date()); setModal("new"); }}>
           + Nueva cita
         </Btn>
       </div>
@@ -394,14 +416,21 @@ export default function AppointmentsPage() {
       {(modal === "new" || modal === "edit") && (
         <Modal
           title={modal === "new" ? "Nueva Cita" : "Editar Cita"}
-          onClose={() => { setModal(null); setSelectedApt(null); }}
+          onClose={() => { setModal(null); setSelectedApt(null); setPreselectedPaciente(null); }}
           wide
         >
           <AppointmentForm
-            appointment={modal === "edit" ? selectedApt : selectedSlot ? { fecha_hora: toLocalISO(selectedSlot) } : null}
+            appointment={
+              modal === "edit"
+                ? selectedApt
+                : {
+                    fecha_hora: selectedSlot ? toLocalISO(selectedSlot) : toLocalISO(new Date()),
+                    paciente_id: preselectedPaciente || "",
+                  }
+            }
             pacientes={pacientes}
             onSave={saveAppointment}
-            onClose={() => { setModal(null); setSelectedApt(null); }}
+            onClose={() => { setModal(null); setSelectedApt(null); setPreselectedPaciente(null); }}
             loading={actionLoading}
           />
         </Modal>

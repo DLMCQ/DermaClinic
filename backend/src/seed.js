@@ -3,6 +3,7 @@
  * Creates demo user if it doesn't exist
  */
 
+const { v4: uuidv4 } = require('uuid');
 const { getDb, initDb, closeDb } = require('./database');
 const { hashPassword } = require('./utils/password');
 
@@ -19,21 +20,21 @@ async function seed() {
 
     for (const userData of users) {
       const exists = await db.queryOne(
-        'SELECT * FROM users WHERE username = $1',
+        'SELECT * FROM users WHERE username = ?',
         [userData.username]
       );
 
       if (!exists) {
         const hashedPassword = await hashPassword(userData.password);
         await db.execute(
-          `INSERT INTO users (username, password_hash, nombre, role, is_active) 
-           VALUES ($1, $2, $3, $4, $5)`,
-          [userData.username, hashedPassword, userData.nombre, userData.role, true]
+          `INSERT INTO users (id, username, password_hash, nombre, role, is_active)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [uuidv4(), userData.username, hashedPassword, userData.nombre, userData.role, 1]
         );
         console.log(`✅ Usuario creado: ${userData.username}`);
       }
     }
-    
+
     await closeDb();
   } catch (err) {
     console.error('❌ Seed failed:', err);

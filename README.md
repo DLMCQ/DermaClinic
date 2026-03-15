@@ -1,418 +1,301 @@
-# 🌸 DermaClinic — Sistema de Gestión Dermatológica
+# DermaClinic
 
-Sistema web de gestión de historia clínica para centro de dermatología.
-**Arquitectura dual-mode**: funciona tanto en red local (SQLite) como en cloud (PostgreSQL/Railway).
-
----
-
-## 🆕 Novedades - Fase 2 Completada
-
-**✅ Nuevas características implementadas:**
-- 🔐 Autenticación JWT (modo cloud)
-- 📊 Dashboard con estadísticas en tiempo real
-- 🔍 Búsqueda avanzada de pacientes (por tratamiento, fechas, productos)
-- 📅 Sistema de calendario de citas (modo cloud)
-- 👥 Gestión de usuarios con roles (admin/doctor)
-- 🛡️ Seguridad mejorada (rate limiting, helmet, compression)
-- ✅ Validación de datos con Joi
-- 🎨 Upload de imágenes a Railway Volumes (modo cloud)
-
-**🔜 Próximamente - Fase 3:**
-- Dashboard visual con gráficos
-- Interfaz de login
-- Calendario interactivo
-- UI responsive (mobile-first)
+Web-based clinical management system for dermatology centers. Allows practitioners to manage patient records, treatment sessions, appointments, and clinical history through a centralized cloud interface.
 
 ---
 
-## 🎯 Modos de Operación
+## Table of Contents
 
-### Modo Local (actual)
-- Base de datos: **SQLite** (archivo `backend/data/dermaclinic.db`)
-- Autenticación: **No requerida**
-- Red: **Solo red local**
-- Ideal para: Clínicas con una sola PC o red interna
-
-### Modo Cloud (disponible)
-- Base de datos: **PostgreSQL** en Railway
-- Autenticación: **JWT con roles**
-- Acceso: **Desde cualquier lugar con internet**
-- Ideal para: Acceso remoto, múltiples sucursales
-
-**Cambiar de modo:** Editar `backend/.env` → `DATABASE_MODE=local` o `DATABASE_MODE=cloud`
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [Security](#security)
+- [Environment Variables](#environment-variables)
+- [Getting Started](#getting-started)
+- [Deployment](#deployment)
 
 ---
 
-## 📋 Requisitos previos
+## Tech Stack
 
-Instalar **Node.js LTS** desde: https://nodejs.org
-(Versión 18 o superior. Solo se instala una vez en la PC servidora.)
+**Frontend**
+- React 18 (SPA)
+- React Router v6
+- React Big Calendar
+- Vite (build tool)
 
----
+**Backend**
+- Node.js v24
+- Express 4
+- JSON Web Tokens (jsonwebtoken)
+- bcryptjs
+- Joi (schema validation)
+- Helmet, express-rate-limit (security)
+- Multer (file uploads)
+- Morgan (HTTP logging)
 
-## 🚀 Instalación (primera vez)
+**Database**
+- PostgreSQL
+- node-postgres / pg (connection pool)
 
-### En Windows:
-1. Descomprimí la carpeta `dermaclinic` en cualquier lugar (ej: `C:\DermaClinic`)
-2. Hacé doble clic en **`INSTALAR_Y_ARRANCAR.bat`**
-3. Esperá que instale todo (puede tardar 2-3 minutos)
-4. Cuando aparezca `Servidor corriendo en: http://0.0.0.0:3001`, ¡listo!
-
-### En Mac/Linux:
-```bash
-cd dermaclinic
-cd backend && npm install && cd ..
-cd frontend && npm install && npm run build:local && cd ..
-cp -r frontend/build backend/frontend
-cd backend && node src/server.js
-```
-
----
-
-## 💻 Uso diario (después de instalar)
-
-1. Doble clic en **`ARRANCAR_SERVIDOR.bat`** en la PC servidora
-2. Abrir el navegador en **cualquier PC de la red** y entrar a:
-   - PC servidora: `http://localhost:3001`
-   - Otras PCs: `http://[IP-DE-LA-PC-SERVIDORA]:3001`
-
-### ¿Cómo saber la IP de la PC servidora?
-```
-Windows: Abrí CMD y ejecutá: ipconfig
-         Buscá "Dirección IPv4" → ejemplo: 192.168.1.50
-```
-→ Las otras PCs acceden entrando a: `http://192.168.1.50:3001`
+**Infrastructure**
+- Railway (hosting, database, volumes)
 
 ---
 
-## 🗂 Estructura del proyecto
+## Architecture
+
+The application follows a standard client-server architecture. The React frontend is compiled by Vite and served as static files by the Express server. All data access goes through a REST API authenticated via JWT.
 
 ```
-dermaclinic/
-├── INSTALAR_Y_ARRANCAR.bat        ← Primera instalación
-├── ARRANCAR_SERVIDOR.bat          ← Uso diario
-├── CLAUDE.md                      ← Documentación técnica para desarrollo
-├── TEST_ENDPOINTS.md              ← Guía de testing de APIs
+Client (Browser)
+      |
+      | HTTPS
+      v
+Express Server (Node.js) — Port 3001
+      |
+      | SQL via pg connection pool
+      v
+PostgreSQL (Railway)
+```
+
+The backend exposes a REST API under `/api/`. Every endpoint except `/api/auth/login` and `/api/health` requires a valid Bearer token. Role-based access control restricts admin-only operations such as user management.
+
+---
+
+## Project Structure
+
+```
+DermaClinic/
+├── railway.json
+├── start.sh
 ├── backend/
 │   ├── package.json
-│   ├── .env                       ← Configuración (DATABASE_MODE, secrets)
-│   ├── .env.example               ← Plantilla de configuración
-│   ├── src/
-│   │   ├── server.js              ← Servidor Express
-│   │   ├── config/
-│   │   │   └── index.js           ← Configuración centralizada
-│   │   ├── database/
-│   │   │   ├── index.js           ← Factory (dual-mode)
-│   │   │   ├── sqliteAdapter.js   ← Adapter para SQLite
-│   │   │   └── postgresAdapter.js ← Adapter para PostgreSQL
-│   │   ├── middleware/
-│   │   │   ├── auth.js            ← Verificación JWT
-│   │   │   ├── roleCheck.js       ← Control de roles
-│   │   │   ├── validate.js        ← Validación Joi
-│   │   │   ├── errorHandler.js    ← Manejo de errores
-│   │   │   └── security.js        ← Helmet, rate limiting, compression
-│   │   ├── routes/
-│   │   │   ├── auth.js            ← Login, logout, refresh
-│   │   │   ├── users.js           ← Gestión de usuarios (cloud)
-│   │   │   ├── pacientes.js       ← CRUD pacientes + búsqueda avanzada
-│   │   │   ├── sesiones.js        ← CRUD sesiones
-│   │   │   ├── dashboard.js       ← Estadísticas y métricas
-│   │   │   ├── appointments.js    ← Calendario de citas (cloud)
-│   │   │   └── images.js          ← Upload a Railway Volumes (cloud)
-│   │   ├── utils/
-│   │   │   ├── jwt.js             ← Generación/verificación tokens
-│   │   │   └── password.js        ← Bcrypt hashing
-│   │   └── migrations/
-│   │       ├── 001_initial_schema.sql
-│   │       ├── 002_users_auth.sql
-│   │       └── 003_appointments.sql
-│   └── data/
-│       └── dermaclinic.db         ← Base de datos SQLite (modo local)
+│   ├── .env.example
+│   └── src/
+│       ├── server.js               # Express app entry point
+│       ├── config/
+│       │   └── index.js            # Centralized configuration
+│       ├── database/
+│       │   ├── index.js            # Database initialization
+│       │   └── postgresAdapter.js  # pg Pool wrapper (query, queryOne, execute, transaction)
+│       ├── middleware/
+│       │   ├── auth.js             # JWT verification
+│       │   ├── roleCheck.js        # Role-based access control
+│       │   ├── validate.js         # Joi request validation
+│       │   ├── errorHandler.js     # Global error handler
+│       │   └── security.js         # Helmet, rate limiting, compression
+│       ├── routes/
+│       │   ├── auth.js             # Login, logout, token refresh
+│       │   ├── users.js            # User management (admin only)
+│       │   ├── pacientes.js        # Patient CRUD + advanced search
+│       │   ├── sesiones.js         # Treatment session CRUD
+│       │   ├── appointments.js     # Appointment calendar
+│       │   ├── dashboard.js        # Metrics and statistics
+│       │   └── images.js           # Image upload to Railway Volumes
+│       ├── utils/
+│       │   ├── jwt.js              # Token generation and verification
+│       │   └── password.js         # bcrypt hashing
+│       └── migrations/
+│           ├── 001_initial_schema.sql
+│           ├── 002_users_auth.sql
+│           └── 003_appointments.sql
 └── frontend/
     ├── package.json
-    ├── public/
-    │   └── index.html
+    ├── vite.config.js
     └── src/
-        ├── index.js
-        ├── App.js                 ← Aplicación React (SPA)
-        └── api.js                 ← Cliente HTTP
+        ├── App.jsx
+        ├── index.jsx
+        ├── pages/
+        │   ├── LoginPage.jsx
+        │   ├── DashboardPage.jsx
+        │   ├── PatientsPage.jsx
+        │   ├── AppointmentsPage.jsx
+        │   └── UsersPage.jsx
+        ├── components/
+        │   ├── auth/
+        │   ├── common/
+        │   ├── layout/
+        │   ├── patients/
+        │   └── sessions/
+        ├── context/
+        ├── hooks/
+        └── utils/
 ```
 
 ---
 
-## 💾 Base de datos
+## API Reference
 
-### Modo Local
-Los datos se guardan en: `backend/data/dermaclinic.db`
+All endpoints require `Authorization: Bearer <token>` unless noted.
 
-**⚠️ Importante — Backup:**
-Copiá regularmente el archivo `dermaclinic.db` a un pendrive o carpeta compartida como respaldo.
+### Authentication
 
-### Modo Cloud
-- Base de datos PostgreSQL en Railway
-- Backups automáticos diarios (configurables)
-- Datos persistentes en Railway Volumes
+| Method | Endpoint | Description | Auth required |
+|--------|----------|-------------|---------------|
+| POST | /api/auth/login | Authenticate and receive tokens | No |
+| POST | /api/auth/refresh | Refresh access token | No |
+| POST | /api/auth/logout | Invalidate refresh token | No |
+| GET | /api/auth/me | Get current user | Yes |
 
----
+### Patients
 
-## 🌐 API REST disponible
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/pacientes | List all patients. Supports query params: `q`, `tratamiento`, `fecha_desde`, `fecha_hasta`, `productos` |
+| GET | /api/pacientes/:id | Get patient with full session history |
+| POST | /api/pacientes | Create patient |
+| PUT | /api/pacientes/:id | Update patient |
+| DELETE | /api/pacientes/:id | Delete patient |
 
-### Endpoints Principales
+### Sessions
 
-| Método | Ruta                              | Descripción                    | Modo   |
-|--------|-----------------------------------|--------------------------------|--------|
-| GET    | /api/health                       | Estado del servidor            | Ambos  |
-| GET    | /api/pacientes                    | Listar pacientes               | Ambos  |
-| GET    | /api/pacientes?q=texto            | Buscar por nombre/DNI          | Ambos  |
-| GET    | /api/pacientes?tratamiento=X      | Buscar por tratamiento         | Ambos  |
-| GET    | /api/pacientes?fecha_desde=YYYY-MM-DD | Buscar por rango de fechas | Ambos  |
-| GET    | /api/pacientes/:id                | Ver ficha completa             | Ambos  |
-| POST   | /api/pacientes                    | Crear paciente                 | Ambos  |
-| PUT    | /api/pacientes/:id                | Editar paciente                | Ambos  |
-| DELETE | /api/pacientes/:id                | Eliminar paciente              | Ambos  |
-| POST   | /api/sesiones                     | Crear sesión                   | Ambos  |
-| PUT    | /api/sesiones/:id                 | Editar sesión                  | Ambos  |
-| DELETE | /api/sesiones/:id                 | Eliminar sesión                | Ambos  |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/sesiones | Create treatment session |
+| PUT | /api/sesiones/:id | Update session |
+| DELETE | /api/sesiones/:id | Delete session |
 
-### Endpoints Nuevos (Fase 2)
+### Appointments
 
-| Método | Ruta                              | Descripción                    | Modo   |
-|--------|-----------------------------------|--------------------------------|--------|
-| POST   | /api/auth/login                   | Login (username/password)      | Cloud  |
-| POST   | /api/auth/refresh                 | Renovar access token           | Cloud  |
-| POST   | /api/auth/logout                  | Cerrar sesión                  | Cloud  |
-| GET    | /api/auth/me                      | Usuario actual                 | Cloud  |
-| GET    | /api/dashboard/stats              | Estadísticas generales         | Ambos  |
-| GET    | /api/dashboard/stats/range        | Stats por rango de fechas      | Ambos  |
-| GET    | /api/dashboard/activity           | Actividad reciente             | Ambos  |
-| GET    | /api/users                        | Listar usuarios                | Cloud  |
-| POST   | /api/users                        | Crear usuario                  | Cloud  |
-| PUT    | /api/users/:id                    | Actualizar usuario             | Cloud  |
-| DELETE | /api/users/:id                    | Desactivar usuario             | Cloud  |
-| GET    | /api/appointments                 | Listar citas                   | Cloud  |
-| POST   | /api/appointments                 | Crear cita                     | Cloud  |
-| PUT    | /api/appointments/:id             | Actualizar cita                | Cloud  |
-| DELETE | /api/appointments/:id             | Eliminar cita                  | Cloud  |
-| POST   | /api/images/upload                | Subir imagen                   | Cloud  |
-| DELETE | /api/images/delete                | Eliminar imagen                | Cloud  |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/appointments | List appointments. Supports: `fecha_desde`, `fecha_hasta`, `paciente_id`, `estado`, `doctor_id` |
+| GET | /api/appointments/:id | Get appointment by ID |
+| POST | /api/appointments | Create appointment |
+| PUT | /api/appointments/:id | Update appointment |
+| PATCH | /api/appointments/:id/complete | Mark as completed |
+| PATCH | /api/appointments/:id/cancel | Cancel appointment |
+| DELETE | /api/appointments/:id | Delete appointment |
 
-**📖 Documentación completa:** Ver `TEST_ENDPOINTS.md`
+### Dashboard
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/dashboard/stats | General statistics |
+| GET | /api/dashboard/stats/range | Statistics for a date range (`fecha_desde`, `fecha_hasta`) |
+| GET | /api/dashboard/activity | Recent session activity |
 
-## 🔐 Seguridad (Fase 2)
+### Users (admin only)
 
-### Rate Limiting
-- **General**: 100 requests / 15 minutos
-- **Auth**: 5 intentos de login / 15 minutos
-- Previene ataques de fuerza bruta
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/users | List all users |
+| GET | /api/users/:id | Get user by ID |
+| POST | /api/users | Create user |
+| PUT | /api/users/:id | Update user |
+| DELETE | /api/users/:id | Delete user |
 
-### Validación de Datos
-- Joi schemas para todos los endpoints
-- Validación automática de tipos, formatos y requerimientos
-- Mensajes de error descriptivos
+### Images
 
-### Autenticación (Modo Cloud)
-- JWT con access tokens (15 min) y refresh tokens (7 días)
-- Passwords hasheados con bcrypt (10 rounds)
-- Tokens revocables en base de datos
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/images/upload | Upload image to Railway Volume |
+| DELETE | /api/images/delete | Delete image |
+| GET | /api/images/info | Get image metadata |
 
-### Headers de Seguridad
-- Helmet configurado (XSS, CSRF, clickjacking)
-- CORS restrictivo (configurable por dominio)
-- Compression para mejor performance
+### System
+
+| Method | Endpoint | Description | Auth required |
+|--------|----------|-------------|---------------|
+| GET | /api/health | Server and database status | No |
 
 ---
 
-## 🧪 Testing
+## Security
 
-Para probar los endpoints nuevos:
+**Authentication**
+- Access tokens expire after 8 hours (JWT signed with HS256)
+- Refresh tokens stored in the database and revocable on logout
+- Passwords hashed with bcrypt (10 rounds)
 
-```bash
-# Ver estado del servidor
-curl http://localhost:3001/api/health
+**Rate Limiting**
+- General API: 100 requests per 15 minutes per IP
+- Auth endpoints: 5 requests per 15 minutes per IP
 
-# Ver estadísticas
-curl http://localhost:3001/api/dashboard/stats
+**HTTP Security**
+- Helmet sets secure response headers (XSS protection, content type, frameguard)
+- CORS restricted to configured origin
+- Response compression via gzip
 
-# Buscar pacientes por tratamiento
-curl "http://localhost:3001/api/pacientes?tratamiento=Botox"
-
-# Crear paciente con validación
-curl -X POST http://localhost:3001/api/pacientes \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Ana García","dni":"12345678"}'
-```
-
-**📖 Guía completa de testing:** Ver `TEST_ENDPOINTS.md`
+**Authorization**
+- Role-based access control with two roles: `admin` and `doctor`
+- Admin-only routes: user management
+- All other routes require any authenticated user
 
 ---
 
-## ⚙️ Configuración Avanzada
+## Environment Variables
 
-### Variables de Entorno (`backend/.env`)
+Copy `.env.example` to `.env` and fill in the values.
 
-```bash
-# Modo de operación
-DATABASE_MODE=local              # local | cloud
+```env
+NODE_ENV=production
 
-# Servidor
 PORT=3001
 HOST=0.0.0.0
-NODE_ENV=development             # development | production
 
-# Base de datos (modo local)
-LOCAL_DB_PATH=../data/dermaclinic.db
+DATABASE_URL=postgresql://user:password@host:5432/database
 
-# Base de datos (modo cloud)
-DATABASE_URL=postgresql://user:pass@host:port/db
+JWT_ACCESS_SECRET=<64-character-random-string>
+JWT_REFRESH_SECRET=<64-character-random-string>
 
-# JWT Secrets (modo cloud)
-JWT_ACCESS_SECRET=<64-char-random-string>
-JWT_REFRESH_SECRET=<64-char-random-string>
+CORS_ORIGIN=https://your-domain.com
 
-# CORS
-CORS_ORIGIN=*                    # * | http://specific-domain.com
+UPLOADS_PATH=/app/uploads
+BACKUP_ENABLED=false
+BACKUP_PATH=/app/backups
 ```
 
-**📖 Ver:** `backend/.env.example` para plantilla completa
-
----
-
-## 🚀 Deploy a Railway (Modo Cloud)
-
-1. Crear cuenta en [railway.app](https://railway.app)
-2. Nuevo proyecto desde GitHub
-3. Agregar PostgreSQL addon
-4. Agregar Railway Volumes:
-   - `/app/uploads` (2GB) para imágenes
-   - `/app/backups` (1GB) para backups
-5. Configurar variables de entorno:
-   ```
-   DATABASE_MODE=cloud
-   DATABASE_URL=${{Postgres.DATABASE_URL}}
-   JWT_ACCESS_SECRET=<generar>
-   JWT_REFRESH_SECRET=<generar>
-   NODE_ENV=production
-   ```
-6. Deploy automático con Git push
-
-**📖 Guía completa:** Ver `~/.claude/plans/sassy-squishing-locket.md`
-
----
-
-## ❓ Solución de problemas
-
-**El servidor no arranca:**
-- Verificar que Node.js esté instalado: `node --version`
-- Verificar que el puerto 3001 no esté ocupado
-- Revisar logs en la consola para errores específicos
-
-**"getDb is not a function":**
-- Renombrar o eliminar el archivo antiguo `backend/src/database.js`
-- El sistema ahora usa `backend/src/database/index.js`
-
-**Las otras PCs no pueden conectarse:**
-- Verificar que están en la misma red WiFi/LAN
-- Verificar que el firewall de Windows permite conexiones al puerto 3001:
-  - Panel de control → Firewall → Reglas de entrada → Nueva regla → Puerto 3001
-
-**Se perdieron los datos (modo local):**
-- Los datos están en `backend/data/dermaclinic.db`
-- Restaurar el archivo desde el último backup
-
-**Errores de validación:**
-- Ver `TEST_ENDPOINTS.md` para formato correcto de requests
-- Los endpoints ahora validan todos los campos con Joi
-- Mensajes de error indican qué campo falla y por qué
-
-**Modo cloud no requiere auth:**
-- Verificar `DATABASE_MODE=cloud` en `.env`
-- Endpoints cloud-only requieren header: `Authorization: Bearer <token>`
-- Obtener token con `POST /api/auth/login`
-
----
-
-## 📊 Estadísticas del Proyecto
-
-**Backend:**
-- Líneas de código: ~2,500
-- Endpoints: 30+
-- Middleware: 7
-- Adaptadores de DB: 2 (SQLite, PostgreSQL)
-
-**Frontend:**
-- Componentes: 1 archivo (App.js) - Fase 3 refactorizará en ~30 componentes
-- Líneas: ~666
-
-**Dependencias principales:**
-- Express 4.18
-- React 18
-- Joi (validación)
-- jsonwebtoken (JWT)
-- bcryptjs (passwords)
-- helmet (seguridad)
-- multer (uploads)
-
----
-
-## 📞 Tecnologías utilizadas
-
-**Frontend:**
-- React 18
-- CSS-in-JS
-- Fetch API
-
-**Backend:**
-- Node.js
-- Express
-- Joi (validación)
-- JWT (autenticación)
-- Bcrypt (hashing)
-- Helmet (seguridad)
-- Morgan (logging)
-
-**Base de datos:**
-- SQLite (sql.js) - modo local
-- PostgreSQL (pg) - modo cloud
-
-**Infraestructura Cloud:**
-- Railway (hosting)
-- Railway PostgreSQL (base de datos)
-- Railway Volumes (archivos)
-
----
-
-## 📝 Roadmap
-
-- [x] **Fase 1**: Sistema Dual-Mode + Autenticación JWT ✅
-- [x] **Fase 2**: Backend completo (APIs, validación, seguridad) ✅
-- [ ] **Fase 3**: Frontend Refactor (componentes, routing, auth UI)
-- [ ] **Fase 4**: Dashboard visual con gráficos
-- [ ] **Fase 5**: Calendario interactivo (react-big-calendar)
-- [ ] **Fase 6**: Responsive Design (mobile-first)
-- [ ] **Fase 7**: Deploy a Railway + Migración de datos
-
-**Estado actual:** Fase 2 completada (backend completo)
-
----
-
-## 🤝 Desarrollo
-
-**Archivos importantes para desarrolladores:**
-- `CLAUDE.md` - Documentación técnica completa
-- `TEST_ENDPOINTS.md` - Guía de testing de APIs
-- `~/.claude/plans/sassy-squishing-locket.md` - Plan completo de migración (31KB)
-
-**Estructura de commits:**
+Generate JWT secrets with:
 ```bash
-git log --oneline
-# 0add1 feat: Implementar Fase 1 - Foundation
-# f27ca claude.md
-# 5180a first commit
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
 ---
 
-*DermaClinic v2.0 — Sistema dual-mode con arquitectura cloud-ready*
-*Última actualización: Febrero 2026 - Fase 2 completada*
+## Getting Started
+
+**Prerequisites**
+- Node.js 18 or higher
+- A PostgreSQL instance (local or remote)
+
+**Install dependencies**
+```bash
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+**Run in development**
+```bash
+# Terminal 1 — backend
+cd backend && npm run dev
+
+# Terminal 2 — frontend
+cd frontend && npm start
+```
+
+**Build frontend for production**
+```bash
+cd frontend && npm run build
+```
+
+The compiled output goes to `frontend/build/` and is served automatically by Express.
+
+---
+
+## Deployment
+
+The project is configured for Railway. Every push to the main branch triggers an automatic deploy.
+
+**Setup steps:**
+
+1. Create a new project on [Railway](https://railway.app)
+2. Connect the GitHub repository
+3. Add a PostgreSQL plugin — Railway injects `DATABASE_URL` automatically
+4. Add a Railway Volume mounted at `/app/uploads` for image storage
+5. Set the environment variables listed above in the Railway dashboard
+6. Deploy
+
+Migrations run automatically on server startup. No manual database setup is required.

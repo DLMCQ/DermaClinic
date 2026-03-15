@@ -1,10 +1,10 @@
 -- Initial schema: pacientes and sesiones tables
--- Migrated from sql.js to PostgreSQL
+-- MySQL version
 
 CREATE TABLE IF NOT EXISTS pacientes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id CHAR(36) NOT NULL,
   nombre VARCHAR(255) NOT NULL,
-  dni VARCHAR(50) NOT NULL UNIQUE,
+  dni VARCHAR(50) NOT NULL,
   fecha_nacimiento DATE,
   telefono VARCHAR(50),
   email VARCHAR(255),
@@ -14,13 +14,15 @@ CREATE TABLE IF NOT EXISTS pacientes (
   motivo_consulta TEXT,
   foto_url TEXT,
   foto_path VARCHAR(500),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_pacientes_dni (dni)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sesiones (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  paciente_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+  id CHAR(36) NOT NULL,
+  paciente_id CHAR(36) NOT NULL,
   fecha DATE NOT NULL,
   tratamiento VARCHAR(255) NOT NULL,
   productos TEXT,
@@ -29,20 +31,17 @@ CREATE TABLE IF NOT EXISTS sesiones (
   imagen_despues TEXT,
   imagen_antes_path VARCHAR(500),
   imagen_despues_path VARCHAR(500),
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_sesiones_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_pacientes_nombre ON pacientes(nombre);
-CREATE INDEX IF NOT EXISTS idx_pacientes_dni ON pacientes(dni);
-CREATE INDEX IF NOT EXISTS idx_sesiones_paciente ON sesiones(paciente_id);
-CREATE INDEX IF NOT EXISTS idx_sesiones_fecha ON sesiones(fecha);
-CREATE INDEX IF NOT EXISTS idx_sesiones_tratamiento ON sesiones(tratamiento);
+CREATE INDEX idx_pacientes_nombre ON pacientes(nombre);
 
--- Comments
-COMMENT ON TABLE pacientes IS 'Tabla de pacientes del sistema';
-COMMENT ON TABLE sesiones IS 'Tabla de sesiones de tratamiento';
-COMMENT ON COLUMN pacientes.foto_url IS 'Legacy base64 image (to be migrated to foto_path)';
-COMMENT ON COLUMN pacientes.foto_path IS 'Path to image file in Railway Volumes';
-COMMENT ON COLUMN sesiones.imagen_antes IS 'Legacy base64 (to be migrated to imagen_antes_path)';
-COMMENT ON COLUMN sesiones.imagen_despues IS 'Legacy base64 (to be migrated to imagen_despues_path)';
+CREATE INDEX idx_pacientes_dni ON pacientes(dni);
+
+CREATE INDEX idx_sesiones_paciente ON sesiones(paciente_id);
+
+CREATE INDEX idx_sesiones_fecha ON sesiones(fecha);
+
+CREATE INDEX idx_sesiones_tratamiento ON sesiones(tratamiento)

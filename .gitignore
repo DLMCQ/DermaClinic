@@ -8,7 +8,6 @@ package-lock.json
 .env.production
 
 # Build outputs
-frontend/build/
 dist/
 
 # Database files (keep in data/)

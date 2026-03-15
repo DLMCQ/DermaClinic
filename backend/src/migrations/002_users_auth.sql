@@ -1,33 +1,35 @@
 -- Users and authentication tables
+-- MySQL version
 
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  username VARCHAR(255) NOT NULL UNIQUE,
+  id CHAR(36) NOT NULL,
+  username VARCHAR(255) NOT NULL,
   email VARCHAR(255),
   password_hash VARCHAR(255) NOT NULL,
   nombre VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'doctor')),
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+  role VARCHAR(20) NOT NULL,
+  is_active TINYINT(1) DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_users_username (username),
+  CONSTRAINT chk_users_role CHECK (role IN ('admin', 'doctor'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token VARCHAR(500) NOT NULL UNIQUE,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id CHAR(36) NOT NULL,
+  token VARCHAR(500) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_refresh_tokens_token (token),
+  CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
+CREATE INDEX idx_users_username ON users(username);
 
--- Comments
-COMMENT ON TABLE users IS 'System users (admin and doctors)';
-COMMENT ON TABLE refresh_tokens IS 'JWT refresh tokens';
-COMMENT ON COLUMN users.role IS 'User role: admin or doctor';
-COMMENT ON COLUMN users.is_active IS 'Whether user account is active';
+CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+
+CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at)
