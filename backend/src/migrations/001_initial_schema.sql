@@ -1,6 +1,3 @@
--- Initial schema: pacientes and sesiones tables
--- MySQL version
-
 CREATE TABLE IF NOT EXISTS pacientes (
   id CHAR(36) NOT NULL,
   nombre VARCHAR(255) NOT NULL,
@@ -17,7 +14,8 @@ CREATE TABLE IF NOT EXISTS pacientes (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_pacientes_dni (dni)
+  UNIQUE KEY uk_pacientes_dni (dni),
+  KEY idx_pacientes_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sesiones (
@@ -33,15 +31,7 @@ CREATE TABLE IF NOT EXISTS sesiones (
   imagen_despues_path VARCHAR(500),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  KEY idx_sesiones_fecha (fecha),
+  KEY idx_sesiones_tratamiento (tratamiento),
   CONSTRAINT fk_sesiones_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX idx_pacientes_nombre ON pacientes(nombre);
-
-CREATE INDEX idx_pacientes_dni ON pacientes(dni);
-
-CREATE INDEX idx_sesiones_paciente ON sesiones(paciente_id);
-
-CREATE INDEX idx_sesiones_fecha ON sesiones(fecha);
-
-CREATE INDEX idx_sesiones_tratamiento ON sesiones(tratamiento)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

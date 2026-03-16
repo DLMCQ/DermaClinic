@@ -1,6 +1,3 @@
--- Users and authentication tables
--- Simplified: plain text password, no email, no timestamps
-
 CREATE TABLE IF NOT EXISTS users (
   id CHAR(36) NOT NULL,
   username VARCHAR(255) NOT NULL,
@@ -19,13 +16,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   expires_at DATETIME NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uk_refresh_tokens_token (token),
+  KEY idx_refresh_tokens_user (user_id),
+  KEY idx_refresh_tokens_expires (expires_at),
   CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX idx_users_username ON users(username);
-
-CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
-
-CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
-
-CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
