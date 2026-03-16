@@ -110,12 +110,6 @@ function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {
             </div>
           </div>
           <Input label="Fecha y hora" value={form.fecha_hora} onChange={set("fecha_hora")} type="datetime-local" required />
-          <Input
-            label="Duración (minutos)"
-            value={form.duracion_minutos}
-            onChange={set("duracion_minutos")}
-            type="number"
-          />
           <Select
             label="Tratamiento planeado"
             value={form.tratamiento_planeado}
@@ -152,7 +146,6 @@ function AppointmentDetail({ appointment, onEdit, onCancel, onDelete, onClose, l
           ["Paciente", appointment.paciente_nombre],
           ["Doctor", appointment.doctor_nombre || "—"],
           ["Fecha y hora", new Date(appointment.fecha_hora).toLocaleString("es-AR", { dateStyle: "long", timeStyle: "short" })],
-          ["Duración", `${appointment.duracion_minutos} minutos`],
           ["Tratamiento", appointment.tratamiento_planeado || "—"],
         ].map(([k, v]) => (
           <div key={k}>
