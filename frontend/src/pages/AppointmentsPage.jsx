@@ -328,7 +328,7 @@ export default function AppointmentsPage() {
     return (
       <div style={{ padding: "60px 32px", textAlign: "center" }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>☁️</div>
-        <h2 style={{ color: C.gold, fontFamily: "serif", margin: "0 0 12px" }}>
+        <h2 style={{ color: C.gold, fontFamily: "Marcellus, serif", margin: "0 0 12px" }}>
           Calendario de citas
         </h2>
         <p style={{ color: C.muted, fontSize: 15, maxWidth: 400, margin: "0 auto" }}>
@@ -353,7 +353,7 @@ export default function AppointmentsPage() {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ margin: 0, color: C.gold, fontSize: 26, fontFamily: "serif", fontWeight: 700 }}>
+          <h1 style={{ margin: 0, color: C.gold, fontSize: 26, fontFamily: "Marcellus, serif", fontWeight: 700 }}>
             Calendario de Citas
           </h1>
           <p style={{ margin: "4px 0 0", color: C.muted, fontSize: 13 }}>

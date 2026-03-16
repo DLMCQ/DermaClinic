@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Btn } from "../common/Btn";
-import { Input, Textarea, ImageUpload } from "../common/FormFields";
+import { Input, ImageUpload } from "../common/FormFields";
 
 export function PatientForm({ patient, onSave, onClose, loading }) {
   const [form, setForm] = useState(
@@ -14,7 +14,6 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
           direccion: patient.direccion || "",
           obra_social: patient.obra_social || "",
           nro_afiliado: patient.nro_afiliado || "",
-          motivo_consulta: patient.motivo_consulta || "",
           foto_url: patient.foto_path || null,
         }
       : {
@@ -26,7 +25,6 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
           direccion: "",
           obra_social: "",
           nro_afiliado: "",
-          motivo_consulta: "",
           foto_url: null,
         }
   );
@@ -68,14 +66,6 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
         <Input label="Dirección" value={form.direccion} onChange={set("direccion")} />
         <Input label="Obra social / Prepaga" value={form.obra_social} onChange={set("obra_social")} />
         <Input label="Nro. afiliado" value={form.nro_afiliado} onChange={set("nro_afiliado")} />
-        <div style={{ gridColumn: "1 / -1" }}>
-          <Textarea
-            label="Motivo de consulta / Antecedentes"
-            value={form.motivo_consulta}
-            onChange={set("motivo_consulta")}
-            rows={3}
-          />
-        </div>
       </div>
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
         <Btn variant="ghost" onClick={onClose} disabled={loading}>

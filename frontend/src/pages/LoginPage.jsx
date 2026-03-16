@@ -70,7 +70,7 @@ export default function LoginPage() {
               margin: "0 0 8px",
               fontSize: 28,
               color: C.gold,
-              fontFamily: "serif",
+              fontFamily: "Marcellus, serif",
               fontWeight: 700,
             }}
           >

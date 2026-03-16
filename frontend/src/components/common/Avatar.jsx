@@ -27,7 +27,7 @@ export function Avatar({ url, name, size = 80 }) {
         fontSize: size * 0.3,
         fontWeight: 700,
         color: "#fff",
-        fontFamily: "serif",
+        fontFamily: "Marcellus, serif",
       }}
     >
       {url ? (

@@ -88,7 +88,7 @@ export function AppLayout() {
               color: C.gold,
               fontWeight: 700,
               fontSize: 20,
-              fontFamily: "serif",
+              fontFamily: "Marcellus, serif",
             }}
           >
             Instituto Cerrolaza
@@ -236,7 +236,7 @@ export function AppLayout() {
             >
               ☰
             </button>
-            <span style={{ color: C.gold, fontWeight: 700, fontFamily: "serif", fontSize: 15 }}>
+            <span style={{ color: C.gold, fontWeight: 700, fontFamily: "Marcellus, serif", fontSize: 15 }}>
               Instituto Cerrolaza
             </span>
           </div>

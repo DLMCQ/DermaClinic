@@ -425,7 +425,7 @@ export default function PatientsPage() {
                           fontSize: isMobile ? 20 : 26,
                           color: C.text,
                           fontWeight: 700,
-                          fontFamily: "serif",
+                          fontFamily: "Marcellus, serif",
                           textAlign: isMobile ? "center" : "left",
                         }}
                       >
@@ -548,7 +548,7 @@ export default function PatientsPage() {
                       margin: "0 0 14px",
                       color: C.gold,
                       fontSize: isMobile ? 16 : 19,
-                      fontFamily: "serif",
+                      fontFamily: "Marcellus, serif",
                     }}
                   >
                     Próximas citas{" "}
@@ -623,7 +623,7 @@ export default function PatientsPage() {
                     margin: 0,
                     color: C.gold,
                     fontSize: isMobile ? 16 : 19,
-                    fontFamily: "serif",
+                    fontFamily: "Marcellus, serif",
                   }}
                 >
                   Historial de sesiones{" "}
@@ -675,7 +675,7 @@ export default function PatientsPage() {
                               color: C.text,
                               fontWeight: 700,
                               fontSize: 17,
-                              fontFamily: "serif",
+                              fontFamily: "Marcellus, serif",
                             }}
                           >
                             {s.tratamiento}

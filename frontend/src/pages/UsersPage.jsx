@@ -259,7 +259,7 @@ export default function UsersPage() {
               }}
             >
               <h2
-                style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "serif" }}
+                style={{ margin: "0 0 20px", color: C.gold, fontSize: 20, fontFamily: "Marcellus, serif" }}
               >
                 Detalles del Usuario
               </h2>

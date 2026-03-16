@@ -41,7 +41,7 @@ export function Modal({ title, onClose, children, wide }) {
             style={{
               color: C.gold,
               fontSize: 20,
-              fontFamily: "serif",
+              fontFamily: "Marcellus, serif",
               margin: 0,
             }}
           >

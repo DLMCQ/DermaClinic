@@ -1,14 +1,17 @@
 // Colores y estilos globales del tema Instituto Cerrolaza
 export const C = {
   bg: "#ffffff",
-  surface: "#f5f0ea",
-  border: "#e0d5c5",
-  gold: "#c9a96e",
-  goldLight: "#a0896a",
-  text: "#1a1410",
-  muted: "#7a6a58",
+  surface: "#f4f6f9",
+  border: "#c8d0db",
+  gold: "#1A989D",
+  goldLight: "#405570",
+  text: "#293647",
+  muted: "#1E2D40BA",
   danger: "#e05a5a",
   success: "#5a9e6f",
+  accent: "#405570",
+  primary: "#293647",
+  secondary: "#1A989D",
 };
 
 export const inputStyle = {
