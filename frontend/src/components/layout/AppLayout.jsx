@@ -20,7 +20,6 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { to: "/dashboard", label: "Dashboard", icon: "📊" },
     { to: "/pacientes", label: "Pacientes", icon: "🌸" },
     { to: "/citas", label: "Citas", icon: "📅" },
     ...(user?.role === "admin" ? [{ to: "/usuarios", label: "Usuarios", icon: "👥" }] : []),

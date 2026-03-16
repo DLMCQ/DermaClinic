@@ -3,7 +3,6 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
 import PatientsPage from "./pages/PatientsPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
 import UsersPage from "./pages/UsersPage";
@@ -21,8 +20,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route index element={<Navigate to="/pacientes" replace />} />
             <Route path="/pacientes" element={<PatientsPage />} />
             <Route path="/citas" element={<AppointmentsPage />} />
             <Route
@@ -34,7 +32,7 @@ export default function App() {
               }
             />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/pacientes" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

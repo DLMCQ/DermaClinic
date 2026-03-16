@@ -7,7 +7,7 @@ export function ProtectedRoute({ children, allowedRoles }) {
   if (!user) return <Navigate to="/login" replace />;
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/pacientes" replace />;
   }
 
   return children ?? <Outlet />;

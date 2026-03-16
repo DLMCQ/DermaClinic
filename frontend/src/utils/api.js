@@ -111,10 +111,6 @@ export const api = {
   updateUsuario: (id, data) => request("PUT", `/users/${id}`, data),
   deleteUsuario: (id) => request("DELETE", `/users/${id}`),
 
-  // Dashboard
-  getDashboardStats: () => request("GET", "/dashboard/stats"),
-  getDashboardActivity: (limit = 10) => request("GET", `/dashboard/activity?limit=${limit}`),
-
   // Imágenes (Cloudinary)
   uploadImage: async (file, type = 'general') => {
     const token = localStorage.getItem('accessToken');

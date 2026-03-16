@@ -46,7 +46,6 @@ const authRouter = require("./routes/auth");
 const usersRouter = require("./routes/users");
 const pacientesRouter = require("./routes/pacientes");
 const sesionesRouter = require("./routes/sesiones");
-const dashboardRouter = require("./routes/dashboard");
 const appointmentsRouter = require("./routes/appointments");
 const imagesRouter = require("./routes/images");
 
@@ -57,7 +56,6 @@ app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/pacientes", pacientesRouter);
 app.use("/api/sesiones", sesionesRouter);
-app.use("/api/dashboard", dashboardRouter);
 app.use("/api/appointments", appointmentsRouter);
 app.use("/api/images", imagesRouter);
 
