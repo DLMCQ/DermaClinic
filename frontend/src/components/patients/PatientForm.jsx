@@ -15,7 +15,7 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
           obra_social: patient.obra_social || "",
           nro_afiliado: patient.nro_afiliado || "",
           motivo_consulta: patient.motivo_consulta || "",
-          foto_url: patient.foto_url || null,
+          foto_url: patient.foto_path || null,
         }
       : {
           nombre: "",
@@ -38,7 +38,8 @@ export function PatientForm({ patient, onSave, onClose, loading }) {
       alert("Nombre y DNI son obligatorios");
       return;
     }
-    onSave(form);
+    const { foto_url, ...rest } = form;
+    onSave({ ...rest, foto_path: foto_url });
   };
 
   const handleKeyDown = (e) => {

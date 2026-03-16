@@ -291,7 +291,7 @@ export default function PatientsPage() {
                       e.currentTarget.style.borderColor = C.border;
                   }}
                 >
-                  <Avatar url={p.foto_url} name={p.nombre} size={48} />
+                  <Avatar url={p.foto_path} name={p.nombre} size={48} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
@@ -404,7 +404,7 @@ export default function PatientsPage() {
                   }}
                 >
                   <Avatar
-                    url={selected.foto_url}
+                    url={selected.foto_path}
                     name={selected.nombre}
                     size={isMobile ? 80 : 100}
                   />
