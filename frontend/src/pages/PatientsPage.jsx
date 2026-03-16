@@ -229,7 +229,7 @@ export default function PatientsPage() {
                 placeholder="🔍 Buscar por nombre o DNI..."
                 style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "9px 12px" }}
               />
-              <Btn onClick={() => setModal("newPatient")}>+ Nueva</Btn>
+              <Btn onClick={() => setModal("newPatient")}>+ Nuevo</Btn>
             </div>
             <div style={{ color: C.muted, fontSize: 12 }}>
               {patients.length} paciente{patients.length !== 1 ? "s" : ""}
@@ -373,7 +373,11 @@ export default function PatientsPage() {
                 color: C.border,
               }}
             >
-              <div style={{ fontSize: 64, marginBottom: 16, color: C.border, lineHeight: 1 }}>+</div>
+              <div
+                onClick={() => setModal("newPatient")}
+                style={{ fontSize: 64, marginBottom: 16, color: C.border, lineHeight: 1, cursor: "pointer" }}
+                title="Agregar paciente"
+              >+</div>
               <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>
                 Seleccione un paciente
               </div>
