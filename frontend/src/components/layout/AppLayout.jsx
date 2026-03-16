@@ -72,7 +72,7 @@ export function AppLayout() {
             width: 48,
             height: 48,
             borderRadius: "50%",
-            background: `linear-gradient(135deg, ${C.gold}, #8b5e3c)`,
+            background: C.primary,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

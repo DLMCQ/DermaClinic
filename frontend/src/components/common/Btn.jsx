@@ -14,8 +14,8 @@ export function Btn({ children, onClick, variant = "primary", size = "md", disab
   };
   const v = {
     primary: {
-      background: `linear-gradient(135deg, ${C.gold}, #a07848)`,
-      color: "#0f0c09",
+      background: C.primary,
+      color: "#fff",
     },
     ghost: {
       background: "transparent",

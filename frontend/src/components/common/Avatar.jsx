@@ -17,7 +17,7 @@ export function Avatar({ url, name, size = 80 }) {
         borderRadius: "50%",
         background: url
           ? "transparent"
-          : `linear-gradient(135deg, ${C.gold}, #8b5e3c)`,
+          : C.primary,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
