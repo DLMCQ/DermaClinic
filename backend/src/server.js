@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const morgan = require("morgan");
 const { initDb, getDb } = require("./database");
+const { seedUsers } = require("./seed");
 const config = require("./config");
 const { helmetConfig, generalLimiter, authLimiter, compressionConfig } = require("./middleware/security");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
@@ -109,7 +110,8 @@ app.use('/api/*', notFoundHandler);
 app.use(errorHandler);
 
 // Iniciar DB y luego servidor
-initDb().then(() => {
+initDb().then(async () => {
+  await seedUsers(getDb());
   app.listen(config.server.port, config.server.host, () => {
     console.log("");
     console.log("================================================");
