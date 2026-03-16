@@ -67,21 +67,11 @@ export function AppLayout() {
           gap: 12,
         }}
       >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            background: C.primary,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 26,
-            flexShrink: 0,
-          }}
-        >
-          ⚕
-        </div>
+        <img
+          src="/logo.png"
+          alt="Logo Instituto Cerrolaza"
+          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+        />
         <div>
           <div
             style={{

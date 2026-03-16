@@ -50,21 +50,11 @@ export default function LoginPage() {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: "50%",
-              background: C.primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 32,
-              margin: "0 auto 16px",
-            }}
-          >
-            ⚕
-          </div>
+          <img
+            src="/logo.png"
+            alt="Logo Instituto Cerrolaza"
+            style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", margin: "0 auto 16px", display: "block" }}
+          />
           <h1
             style={{
               margin: "0 0 8px",
