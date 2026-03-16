@@ -4,6 +4,24 @@ const { v4: uuidv4 } = require("uuid");
 const { getDb } = require("../database");
 const { authenticate } = require("../middleware/auth");
 const { validate, schemas } = require("../middleware/validate");
+const cloudinary = require("../utils/cloudinary");
+
+function getPublicId(url) {
+  if (!url || !url.includes("cloudinary.com")) return null;
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z]+$/);
+  return match ? match[1] : null;
+}
+
+async function deleteFromCloudinary(url) {
+  const publicId = getPublicId(url);
+  if (publicId) {
+    try {
+      await cloudinary.uploader.destroy(publicId);
+    } catch (e) {
+      console.error("Error eliminando imagen de Cloudinary:", publicId, e.message);
+    }
+  }
+}
 
 // POST crear sesion
 router.post("/", authenticate, validate(schemas.createSesion), async (req, res, next) => {
@@ -56,6 +74,11 @@ router.delete("/:id", authenticate, async (req, res, next) => {
 
     const sesion = await db.queryOne("SELECT * FROM sesiones WHERE id = ?", [req.params.id]);
     if (!sesion) return res.status(404).json({ error: "Sesion no encontrada" });
+
+    await Promise.all([
+      deleteFromCloudinary(sesion.imagen_antes),
+      deleteFromCloudinary(sesion.imagen_despues),
+    ]);
 
     await db.execute("DELETE FROM sesiones WHERE id = ?", [req.params.id]);
     res.json({ ok: true });

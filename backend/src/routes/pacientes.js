@@ -4,6 +4,26 @@ const { v4: uuidv4 } = require("uuid");
 const { getDb } = require("../database");
 const { authenticate } = require("../middleware/auth");
 const { validate, schemas } = require("../middleware/validate");
+const cloudinary = require("../utils/cloudinary");
+
+// Extrae el public_id de una URL de Cloudinary
+function getPublicId(url) {
+  if (!url || !url.includes("cloudinary.com")) return null;
+  // URL format: https://res.cloudinary.com/<cloud>/image/upload/v123/<folder>/<id>.ext
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z]+$/);
+  return match ? match[1] : null;
+}
+
+async function deleteFromCloudinary(url) {
+  const publicId = getPublicId(url);
+  if (publicId) {
+    try {
+      await cloudinary.uploader.destroy(publicId);
+    } catch (e) {
+      console.error("Error eliminando imagen de Cloudinary:", publicId, e.message);
+    }
+  }
+}
 
 // GET todos los pacientes (con búsqueda y filtros avanzados)
 router.get("/", authenticate, async (req, res, next) => {
@@ -145,6 +165,17 @@ router.delete("/:id", authenticate, async (req, res, next) => {
 
     const paciente = await db.queryOne("SELECT * FROM pacientes WHERE id = ?", [req.params.id]);
     if (!paciente) return res.status(404).json({ error: "Paciente no encontrado" });
+
+    // Obtener todas las sesiones del paciente para borrar sus imágenes
+    const sesiones = await db.query("SELECT imagen_antes, imagen_despues FROM sesiones WHERE paciente_id = ?", [req.params.id]);
+
+    // Eliminar de Cloudinary: foto del paciente + imágenes de sesiones
+    const imagenesAEliminar = [
+      paciente.foto_path,
+      ...sesiones.map(s => s.imagen_antes),
+      ...sesiones.map(s => s.imagen_despues),
+    ];
+    await Promise.all(imagenesAEliminar.map(deleteFromCloudinary));
 
     await db.execute("DELETE FROM pacientes WHERE id = ?", [req.params.id]);
     res.json({ ok: true });
