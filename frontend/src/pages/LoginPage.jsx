@@ -53,7 +53,7 @@ export default function LoginPage() {
           <img
             src="/logo.png"
             alt="Logo Instituto Cerrolaza"
-            style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover", margin: "0 auto 16px", display: "block" }}
+            style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", margin: "0 auto 16px", display: "block" }}
           />
           <h1
             style={{

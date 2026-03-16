@@ -70,7 +70,7 @@ export function AppLayout() {
         <img
           src="/logo.png"
           alt="Logo Instituto Cerrolaza"
-          style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+          style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
         />
         <div>
           <div

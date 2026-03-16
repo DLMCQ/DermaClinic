@@ -261,7 +261,7 @@ export default function PatientsPage() {
               >
                 {search
                   ? "Sin resultados para la búsqueda."
-                  : "No hay pacientes registrados.\nHaga clic en '+ Nueva' para comenzar."}
+                  : "No hay pacientes registrados.\n Haga clic en '+ Nueva' para comenzar."}
               </div>
             ) : (
               patients.map((p) => (
