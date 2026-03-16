@@ -261,7 +261,7 @@ export default function PatientsPage() {
               >
                 {search
                   ? "Sin resultados para la búsqueda."
-                  : "No hay pacientes registradas.\nHaga clic en '+ Nueva' para comenzar."}
+                  : "No hay pacientes registrados.\nHaga clic en '+ Nueva' para comenzar."}
               </div>
             ) : (
               patients.map((p) => (
@@ -373,9 +373,9 @@ export default function PatientsPage() {
                 color: C.border,
               }}
             >
-              <div style={{ fontSize: 64, marginBottom: 16, filter: "grayscale(1)" }}>🌸</div>
+              <div style={{ fontSize: 64, marginBottom: 16, color: C.border, lineHeight: 1 }}>+</div>
               <div style={{ fontSize: 18, fontWeight: 600, color: C.muted }}>
-                Seleccione una paciente
+                Seleccione un paciente
               </div>
               <div style={{ fontSize: 13, color: C.border, marginTop: 6 }}>
                 o cree una nueva ficha
