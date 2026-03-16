@@ -74,7 +74,7 @@ export default function LoginPage() {
               fontWeight: 700,
             }}
           >
-            DermaClinic
+            Instituto Cerrolaza
           </h1>
           <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>
             Sistema de Gestión

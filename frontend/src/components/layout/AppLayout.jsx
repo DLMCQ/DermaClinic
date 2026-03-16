@@ -92,7 +92,7 @@ export function AppLayout() {
               fontFamily: "serif",
             }}
           >
-            DermaClinic
+            Instituto Cerrolaza
           </div>
           <div style={{ color: C.muted, fontSize: 13 }}>Sistema de Gestión</div>
         </div>
@@ -238,7 +238,7 @@ export function AppLayout() {
               ☰
             </button>
             <span style={{ color: C.gold, fontWeight: 700, fontFamily: "serif", fontSize: 15 }}>
-              DermaClinic
+              Instituto Cerrolaza
             </span>
           </div>
         )}

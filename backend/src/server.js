@@ -115,7 +115,7 @@ initDb().then(async () => {
   app.listen(config.server.port, config.server.host, () => {
     console.log("");
     console.log("================================================");
-    console.log("   DermaClinic - Servidor Activo");
+    console.log("   Instituto Cerrolaza - Servidor Activo");
     console.log("================================================");
     console.log("");
     console.log(`Puerto:         ${config.server.port}`);

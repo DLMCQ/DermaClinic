@@ -1,4 +1,4 @@
-// Colores y estilos globales del tema DermaClinic
+// Colores y estilos globales del tema Instituto Cerrolaza
 export const C = {
   bg: "#ffffff",
   surface: "#f5f0ea",

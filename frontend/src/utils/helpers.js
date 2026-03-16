@@ -93,7 +93,7 @@ export function generatePDF(patient, formatDate, calcAge) {
     <h2>Historial de Sesiones (${patient.sesiones.length})</h2>
     ${patient.sesiones.length > 0 ? sesiones : `<p style="color:#aaa;font-style:italic;">Sin sesiones registradas.</p>`}
     <div style="margin-top:40px;padding-top:14px;border-top:1px solid #eee;text-align:center;color:#bbb;font-size:11px;">
-      Sistema de Gestión DermaClinic · ${new Date().toLocaleString("es-AR")}
+      Sistema de Gestión Instituto Cerrolaza · ${new Date().toLocaleString("es-AR")}
     </div>
   </body></html>`);
   pw.document.close();
