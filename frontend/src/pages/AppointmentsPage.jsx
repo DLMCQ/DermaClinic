@@ -21,7 +21,7 @@ function toLocalISO(d) {
 }
 
 const ESTADO_COLORS = {
-  pendiente: "#c9a96e",
+  pendiente: "#1A989D",
   confirmada: "#5a9e6f",
   cancelada: "#e05a5a",
 };
@@ -29,31 +29,31 @@ const ESTADO_COLORS = {
 const ESTADOS = ["pendiente", "confirmada", "cancelada"];
 
 const calendarStyles = `
-  .rbc-calendar { background: transparent; color: #1a1410; font-family: 'DM Sans', sans-serif; }
-  .rbc-header { background: #f5f0ea; border-color: #e0d5c5 !important; color: #7a6a58; padding: 10px 4px; font-size: 14px; font-weight: 600; }
-  .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #e0d5c5 !important; }
-  .rbc-day-bg { border-color: #e0d5c5 !important; }
-  .rbc-day-bg.rbc-today { background: transparent; }
-  .rbc-off-range-bg { background: #f0ebe3; }
-  .rbc-date-cell { color: #7a6a58; font-size: 14px; padding: 4px 6px; }
-  .rbc-date-cell.rbc-now { color: #1a1410; font-weight: 700; text-decoration: underline; }
+  .rbc-calendar { background: transparent; color: #293647; font-family: 'DM Sans', sans-serif; }
+  .rbc-header { background: #f4f6f9; border-color: #c8d0db !important; color: #405570; padding: 10px 4px; font-size: 14px; font-weight: 600; }
+  .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #c8d0db !important; }
+  .rbc-day-bg { border-color: #c8d0db !important; }
+  .rbc-day-bg.rbc-today { background: rgba(26,152,157,0.06); }
+  .rbc-off-range-bg { background: #eef0f4; }
+  .rbc-date-cell { color: #405570; font-size: 14px; padding: 4px 6px; }
+  .rbc-date-cell.rbc-now { color: #1A989D; font-weight: 700; text-decoration: underline; }
   .rbc-toolbar { margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
-  .rbc-toolbar button { background: #f5f0ea; border: 1px solid #e0d5c5; color: #7a6a58; padding: 7px 14px; border-radius: 8px; font-family: inherit; cursor: pointer; font-size: 14px; }
-  .rbc-toolbar button:hover { border-color: #c9a96e; color: #c9a96e; }
-  .rbc-toolbar button.rbc-active { background: rgba(201,169,110,0.15); border-color: #c9a96e; color: #c9a96e; }
-  .rbc-toolbar-label { color: #c9a96e; font-weight: 700; font-family: serif; font-size: 20px; }
+  .rbc-toolbar button { background: #f4f6f9; border: 1px solid #c8d0db; color: #405570; padding: 7px 14px; border-radius: 8px; font-family: inherit; cursor: pointer; font-size: 14px; }
+  .rbc-toolbar button:hover { border-color: #1A989D; color: #1A989D; }
+  .rbc-toolbar button.rbc-active { background: rgba(26,152,157,0.12); border-color: #1A989D; color: #1A989D; }
+  .rbc-toolbar-label { color: #1A989D; font-weight: 700; font-family: "Marcellus, serif"; font-size: 20px; }
   .rbc-event { border-radius: 6px !important; border: none !important; font-size: 13px; padding: 3px 8px; }
   .rbc-event-label { font-size: 12px; }
-  .rbc-time-slot { border-color: #e0d5c5 !important; }
-  .rbc-timeslot-group { border-color: #e0d5c5 !important; }
-  .rbc-time-content { border-color: #e0d5c5 !important; }
-  .rbc-time-header-content { border-color: #e0d5c5 !important; }
-  .rbc-current-time-indicator { background: #c9a96e; }
-  .rbc-show-more { color: #c9a96e; background: transparent; font-size: 13px; }
-  .rbc-agenda-table { border-color: #e0d5c5; }
-  .rbc-agenda-table td, .rbc-agenda-table th { border-color: #e0d5c5 !important; color: #1a1410; }
-  .rbc-agenda-date-cell, .rbc-agenda-time-cell { color: #7a6a58; }
-  .rbc-time-gutter .rbc-label { color: #7a6a58; font-size: 13px; }
+  .rbc-time-slot { border-color: #c8d0db !important; }
+  .rbc-timeslot-group { border-color: #c8d0db !important; }
+  .rbc-time-content { border-color: #c8d0db !important; }
+  .rbc-time-header-content { border-color: #c8d0db !important; }
+  .rbc-current-time-indicator { background: #1A989D; }
+  .rbc-show-more { color: #1A989D; background: transparent; font-size: 13px; }
+  .rbc-agenda-table { border-color: #c8d0db; }
+  .rbc-agenda-table td, .rbc-agenda-table th { border-color: #c8d0db !important; color: #293647; }
+  .rbc-agenda-date-cell, .rbc-agenda-time-cell { color: #405570; }
+  .rbc-time-gutter .rbc-label { color: #405570; font-size: 13px; }
 `;
 
 function AppointmentForm({ appointment, pacientes, onSave, onClose, loading }) {
