@@ -21,7 +21,7 @@ const getClientIp = (req) => {
 // Rate limiting para prevenir ataques de fuerza bruta
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // límite de 100 requests por ventana
+  max: 300, // límite de 300 requests por ventana (6 usuarios concurrentes)
   message: {
     error: 'Demasiadas peticiones desde esta IP, por favor intente más tarde',
   },
