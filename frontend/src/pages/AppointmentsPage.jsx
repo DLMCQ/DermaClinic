@@ -14,19 +14,24 @@ import { C, TRATAMIENTOS } from "../utils/theme";
 moment.locale("es");
 const localizer = momentLocalizer(moment);
 
-// Forzar traducciones de días/meses en react-big-calendar
+// Nombres en español hardcodeados para evitar problemas de locale en react-big-calendar
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const MESES_CORTO = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const DIAS_CORTO = ["dom","lun","mar","mié","jue","vie","sáb"];
+
 const formats = {
-  monthHeaderFormat: (date) => moment(date).format("MMMM YYYY"),
+  monthHeaderFormat: (date) => `${MESES[date.getMonth()]} ${date.getFullYear()}`,
   weekHeaderFormat: ({ start, end }) =>
-    `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
-  dayHeaderFormat: (date) => moment(date).format("dddd, D [de] MMMM"),
+    `${start.getDate()} ${MESES_CORTO[start.getMonth()]} – ${end.getDate()} ${MESES_CORTO[end.getMonth()]} ${end.getFullYear()}`,
+  dayHeaderFormat: (date) => `${DIAS[date.getDay()]}, ${date.getDate()} de ${MESES[date.getMonth()]}`,
   dayRangeHeaderFormat: ({ start, end }) =>
-    `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
-  weekdayFormat: (date) => moment(date).format("dddd"),
-  dayFormat: (date) => moment(date).format("D dddd"),
-  agendaDateFormat: (date) => moment(date).format("ddd D MMM"),
+    `${start.getDate()} ${MESES_CORTO[start.getMonth()]} – ${end.getDate()} ${MESES_CORTO[end.getMonth()]} ${end.getFullYear()}`,
+  weekdayFormat: (date) => DIAS[date.getDay()],
+  dayFormat: (date) => `${date.getDate()} ${DIAS[date.getDay()]}`,
+  agendaDateFormat: (date) => `${DIAS_CORTO[date.getDay()]} ${date.getDate()} ${MESES_CORTO[date.getMonth()]}`,
   agendaHeaderFormat: ({ start, end }) =>
-    `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
+    `${start.getDate()} ${MESES_CORTO[start.getMonth()]} – ${end.getDate()} ${MESES_CORTO[end.getMonth()]} ${end.getFullYear()}`,
 };
 
 function toLocalISO(d) {
