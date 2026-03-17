@@ -14,6 +14,23 @@ import { C, TRATAMIENTOS } from "../utils/theme";
 moment.locale("es");
 const localizer = momentLocalizer(moment);
 
+// Nombres en español hardcodeados para evitar problemas de locale en react-big-calendar
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const DIAS = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const DIAS_CORTO = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+const formats = {
+  monthHeaderFormat: (date) => `${MESES[date.getMonth()]} ${date.getFullYear()}`,
+  weekHeaderFormat: ({ start, end }) =>
+    `${start.getDate()} ${MESES_CORTO[start.getMonth()]} – ${end.getDate()} ${MESES_CORTO[end.getMonth()]} ${end.getFullYear()}`,
+  dayHeaderFormat: (date) => `${DIAS[date.getDay()]}, ${date.getDate()} de ${MESES[date.getMonth()]}`,
+  dayRangeHeaderFormat: ({ start, end }) =>
+    `${start.getDate()} ${MESES_CORTO[start.getMonth()]} – ${end.getDate()} ${MESES_CORTO[end.getMonth()]} ${end.getFullYear()}`,
+  weekdayFormat: (date) => DIAS[date.getDay()],
+  dayFormat: (date) => `${date.getDate()} ${DIAS[date.getDay()]}`,
+};
+
 function toLocalISO(d) {
   const date = new Date(d);
   const pad = n => String(n).padStart(2, "0");
@@ -379,7 +396,7 @@ export default function AppointmentsPage() {
           onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
           selectable
-          views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+          views={[Views.MONTH, Views.WEEK, Views.DAY]}
           view={currentView}
           onView={setCurrentView}
           date={currentDate}
@@ -387,6 +404,7 @@ export default function AppointmentsPage() {
           defaultView={Views.WEEK}
           min={new Date(2000, 0, 1, 6, 0, 0)}
           max={new Date(2000, 0, 1, 22, 0, 0)}
+          formats={formats}
           eventPropGetter={eventStyleGetter}
           messages={{
             today: "Hoy",
@@ -395,7 +413,6 @@ export default function AppointmentsPage() {
             month: "Mes",
             week: "Semana",
             day: "Día",
-            agenda: "Agenda",
             date: "Fecha",
             time: "Hora",
             event: "Evento",
