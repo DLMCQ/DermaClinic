@@ -22,13 +22,20 @@ npm run preview   # preview production build
 bash start.sh     # installs, builds frontend, seeds DB, starts server
 ```
 
-After any frontend source change, rebuild and commit the build:
+## REGLA OBLIGATORIA — Deploy a Hostinger
+
+Antes de cualquier `git push origin Hostinger` (o push a la rama de producción), si hubo cambios en `frontend/src/`, **siempre** ejecutar el build primero:
+
 ```bash
 cd frontend && npm run build
+cd ..
 git add frontend/build/ frontend/src/
-git commit -m "..."
+git commit -m "Build: actualizar build del frontend"
 git push origin Hostinger
 ```
+
+**Nunca pushear a Hostinger sin haber rebuildeado si se modificó algo en `frontend/src/`.**
+El servidor sirve `frontend/build/` como archivos estáticos — sin rebuild, los cambios no se ven en producción.
 
 ## Architecture
 
