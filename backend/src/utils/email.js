@@ -13,7 +13,8 @@ function createTransporter() {
 
 function formatDate(s) {
   if (!s) return '';
-  const [y, m, d] = s.slice(0, 10).split('-');
+  const str = s instanceof Date ? s.toISOString() : String(s);
+  const [y, m, d] = str.slice(0, 10).split('-');
   return `${d}/${m}/${y}`;
 }
 
@@ -29,7 +30,7 @@ function calcAge(dob) {
 
 function buildFichaHtml(patient) {
   const sesiones = [...patient.sesiones]
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
+    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
     .map((s) => `
       <div style="page-break-inside:avoid;margin-bottom:22px;border:1px solid #c8d0db;border-radius:8px;padding:18px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
