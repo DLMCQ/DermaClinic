@@ -39,6 +39,7 @@ export default function PatientsPage() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [selectedSessions, setSelectedSessions] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const searchTimeout = useRef();
@@ -196,14 +197,11 @@ export default function PatientsPage() {
   };
 
   const handleSendEmail = async () => {
-    if (!selected.email) {
-      showToast("El paciente no tiene email registrado", "error");
-      return;
-    }
     setSendingEmail(true);
     try {
-      await api.sendFichaEmail(selected.id);
+      await api.sendFichaEmail(selected.id, selectedSessions);
       showToast(`Ficha enviada a ${selected.email}`);
+      setModal(null);
     } catch (e) {
       showToast(e.message, "error");
     } finally {
@@ -560,10 +558,16 @@ export default function PatientsPage() {
                     <Btn
                       variant="ghost"
                       size="sm"
-                      onClick={handleSendEmail}
-                      disabled={sendingEmail}
+                      onClick={() => {
+                        if (!selected.email) {
+                          showToast("El paciente no tiene email registrado", "error");
+                          return;
+                        }
+                        setSelectedSessions(selected.sesiones.map(s => s.id));
+                        setModal("sendEmail");
+                      }}
                     >
-                      {sendingEmail ? "Enviando..." : "✉️ Email"}
+                      ✉️ Email
                     </Btn>
                   </div>
                 </div>
@@ -868,6 +872,60 @@ export default function PatientsPage() {
             onClose={() => { setModal(null); setEditingSession(null); }}
             loading={loading}
           />
+        </Modal>
+      )}
+      {modal === "sendEmail" && selected && (
+        <Modal title="Enviar ficha por email" onClose={() => setModal(null)}>
+          <p style={{ color: C.goldLight, marginBottom: 16, fontSize: 14 }}>
+            Destino: <strong>{selected.email}</strong>
+          </p>
+          <p style={{ color: C.muted, marginBottom: 12, fontSize: 13 }}>
+            Seleccioná las sesiones a incluir en el PDF:
+          </p>
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, cursor: 'pointer', fontSize: 13, color: C.text }}>
+            <input
+              type="checkbox"
+              checked={selectedSessions.length === selected.sesiones.length}
+              onChange={(e) =>
+                setSelectedSessions(e.target.checked ? selected.sesiones.map(s => s.id) : [])
+              }
+            />
+            Seleccionar todas ({selected.sesiones.length})
+          </label>
+          <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+            {[...selected.sesiones]
+              .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+              .map(s => (
+                <label key={s.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, color: C.text }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSessions.includes(s.id)}
+                    onChange={(e) =>
+                      setSelectedSessions(prev =>
+                        e.target.checked ? [...prev, s.id] : prev.filter(id => id !== s.id)
+                      )
+                    }
+                    style={{ marginTop: 2 }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 500 }}>{s.tratamiento}</div>
+                    <div style={{ color: C.muted, fontSize: 12 }}>{formatDate(s.fecha)}</div>
+                  </div>
+                </label>
+              ))}
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <Btn variant="ghost" onClick={() => setModal(null)} disabled={sendingEmail}>
+              Cancelar
+            </Btn>
+            <Btn
+              variant="primary"
+              onClick={handleSendEmail}
+              disabled={sendingEmail || selectedSessions.length === 0}
+            >
+              {sendingEmail ? "Enviando..." : `✉️ Enviar (${selectedSessions.length} sesiones)`}
+            </Btn>
+          </div>
         </Modal>
       )}
       {confirmDelete && (

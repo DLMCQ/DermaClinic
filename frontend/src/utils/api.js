@@ -130,7 +130,7 @@ export const api = {
   },
 
   // Email
-  sendFichaEmail: (id) => request("POST", `/pacientes/${id}/send-ficha`),
+  sendFichaEmail: (id, sesionIds) => request("POST", `/pacientes/${id}/send-ficha`, { sesionIds }),
 
   // Citas
   getAppointments: (params = {}) => {

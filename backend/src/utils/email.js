@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const puppeteer = require('puppeteer');
 const config = require('../config');
 
 function createTransporter() {
@@ -93,14 +94,35 @@ function buildFichaHtml(patient) {
   </body></html>`;
 }
 
+async function generatePdfBuffer(html) {
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+  const page = await browser.newPage();
+  await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+  const pdf = await page.pdf({ format: 'A4', printBackground: true });
+  await browser.close();
+  return pdf;
+}
+
 async function sendFichaEmail(patient) {
   const transporter = createTransporter();
+  const html = buildFichaHtml(patient);
+  const pdfBuffer = await generatePdfBuffer(html);
+  const safeName = patient.nombre.replace(/\s+/g, '-');
 
   await transporter.sendMail({
     from: `"Instituto Cerrolaza" <${config.email.user}>`,
     to: patient.email,
     subject: `Tu ficha clínica - ${patient.nombre}`,
-    html: buildFichaHtml(patient),
+    text: `Hola ${patient.nombre},\n\nAdjuntamos tu ficha clínica del Instituto Cerrolaza.\n\nSaludos,\nInstituto Cerrolaza`,
+    attachments: [
+      {
+        filename: `ficha-${safeName}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
   });
 }
 

@@ -171,10 +171,15 @@ router.post("/:id/send-ficha", authenticate, async (req, res, next) => {
       return res.status(400).json({ error: "El paciente no tiene email registrado" });
     }
 
-    const sesiones = await db.query(
+    const todasSesiones = await db.query(
       "SELECT * FROM sesiones WHERE paciente_id = ? ORDER BY fecha DESC",
       [req.params.id]
     );
+
+    const { sesionIds } = req.body;
+    const sesiones = sesionIds?.length
+      ? todasSesiones.filter(s => sesionIds.includes(s.id))
+      : todasSesiones;
 
     await sendFichaEmail({ ...paciente, sesiones });
 
