@@ -28,20 +28,13 @@ export const inputStyle = {
 };
 
 export const TRATAMIENTOS = [
-  "Peeling Químico",
-  "Hidratación Profunda",
-  "Luz Pulsada (IPL)",
-  "Radiofrecuencia",
+  "Peeling",
+  "Tratamiento de Hidratación + Radiofrecuencia",
+  "Láser de Luz Pulsada",
   "Mesoterapia",
-  "Microdermoabrasión",
-  "Plasma Rico en Plaquetas (PRP)",
   "Toxina Botulínica",
-  "Rellenos con Ácido Hialurónico",
-  "Láser CO2 Fraccionado",
-  "LED Terapia",
-  "Limpieza Facial Profunda",
-  "Tratamiento Anti-Acné",
-  "Despigmentación",
-  "Examen Dermatoscópico",
+  "Hialuronidasa",
+  "Limpieza Cosmetológica",
+  "Mesodespigmentante",
   "Otro",
 ];
