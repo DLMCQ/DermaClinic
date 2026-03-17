@@ -22,6 +22,11 @@ const formats = {
   dayHeaderFormat: (date) => moment(date).format("dddd, D [de] MMMM"),
   dayRangeHeaderFormat: ({ start, end }) =>
     `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
+  weekdayFormat: (date) => moment(date).format("dddd"),
+  dayFormat: (date) => moment(date).format("D dddd"),
+  agendaDateFormat: (date) => moment(date).format("ddd D MMM"),
+  agendaHeaderFormat: ({ start, end }) =>
+    `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
 };
 
 function toLocalISO(d) {
