@@ -14,6 +14,16 @@ import { C, TRATAMIENTOS } from "../utils/theme";
 moment.locale("es");
 const localizer = momentLocalizer(moment);
 
+// Forzar traducciones de días/meses en react-big-calendar
+const formats = {
+  monthHeaderFormat: (date) => moment(date).format("MMMM YYYY"),
+  weekHeaderFormat: ({ start, end }) =>
+    `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
+  dayHeaderFormat: (date) => moment(date).format("dddd, D [de] MMMM"),
+  dayRangeHeaderFormat: ({ start, end }) =>
+    `${moment(start).format("D MMM")} – ${moment(end).format("D MMM YYYY")}`,
+};
+
 function toLocalISO(d) {
   const date = new Date(d);
   const pad = n => String(n).padStart(2, "0");
@@ -387,6 +397,7 @@ export default function AppointmentsPage() {
           defaultView={Views.WEEK}
           min={new Date(2000, 0, 1, 6, 0, 0)}
           max={new Date(2000, 0, 1, 22, 0, 0)}
+          formats={formats}
           eventPropGetter={eventStyleGetter}
           messages={{
             today: "Hoy",
