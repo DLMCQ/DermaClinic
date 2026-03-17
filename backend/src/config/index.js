@@ -37,4 +37,9 @@ module.exports = {
     path: process.env.UPLOADS_PATH || '/app/uploads',
     maxSize: 5 * 1024 * 1024, // 5MB
   },
+
+  email: {
+    user: process.env.GMAIL_USER || '',
+    pass: process.env.GMAIL_PASS || '',
+  },
 };

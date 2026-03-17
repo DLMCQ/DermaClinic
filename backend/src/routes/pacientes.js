@@ -5,6 +5,7 @@ const { getDb } = require("../database");
 const { authenticate } = require("../middleware/auth");
 const { validate, schemas } = require("../middleware/validate");
 const cloudinary = require("../utils/cloudinary");
+const { sendFichaEmail } = require("../utils/email");
 
 // Extrae el public_id de una URL de Cloudinary
 function getPublicId(url) {
@@ -153,6 +154,31 @@ router.put("/:id", authenticate, validate(schemas.updatePaciente), async (req, r
     );
 
     res.json({ ...updated, sesiones });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST enviar ficha por email al paciente
+router.post("/:id/send-ficha", authenticate, async (req, res, next) => {
+  try {
+    const db = getDb();
+
+    const paciente = await db.queryOne("SELECT * FROM pacientes WHERE id = ?", [req.params.id]);
+    if (!paciente) return res.status(404).json({ error: "Paciente no encontrado" });
+
+    if (!paciente.email) {
+      return res.status(400).json({ error: "El paciente no tiene email registrado" });
+    }
+
+    const sesiones = await db.query(
+      "SELECT * FROM sesiones WHERE paciente_id = ? ORDER BY fecha DESC",
+      [req.params.id]
+    );
+
+    await sendFichaEmail({ ...paciente, sesiones });
+
+    res.json({ ok: true, email: paciente.email });
   } catch (err) {
     next(err);
   }

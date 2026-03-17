@@ -9,6 +9,9 @@ package-lock.json
 # Archive files .md
 Agentcontext.md
 GUIA_AGENTES.md
+
+# Documentación interna (contiene configs con credenciales)
+docs/
 # Build outputs
 dist/
 

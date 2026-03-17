@@ -38,6 +38,7 @@ export default function PatientsPage() {
   const [editingSession, setEditingSession] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const searchTimeout = useRef();
@@ -191,6 +192,22 @@ export default function PatientsPage() {
     } finally {
       setLoading(false);
       setConfirmDelete(null);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!selected.email) {
+      showToast("El paciente no tiene email registrado", "error");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      await api.sendFichaEmail(selected.id);
+      showToast(`Ficha enviada a ${selected.email}`);
+    } catch (e) {
+      showToast(e.message, "error");
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -539,6 +556,14 @@ export default function PatientsPage() {
                       onClick={() => generatePDF(selected, formatDate, calcAge)}
                     >
                       📄 PDF
+                    </Btn>
+                    <Btn
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSendEmail}
+                      disabled={sendingEmail}
+                    >
+                      {sendingEmail ? "Enviando..." : "✉️ Email"}
                     </Btn>
                   </div>
                 </div>

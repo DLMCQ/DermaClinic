@@ -129,6 +129,9 @@ export const api = {
     return data;
   },
 
+  // Email
+  sendFichaEmail: (id) => request("POST", `/pacientes/${id}/send-ficha`),
+
   // Citas
   getAppointments: (params = {}) => {
     const q = new URLSearchParams(params).toString();
