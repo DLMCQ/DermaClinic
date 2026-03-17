@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const puppeteer = require('puppeteer');
+const PDFDocument = require('pdfkit');
 const config = require('../config');
 
 function createTransporter() {
@@ -29,86 +29,141 @@ function calcAge(dob) {
   return age;
 }
 
-function buildFichaHtml(patient) {
-  const sesiones = [...patient.sesiones]
-    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-    .map((s) => `
-      <div style="page-break-inside:avoid;margin-bottom:22px;border:1px solid #c8d0db;border-radius:8px;padding:18px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-          <h3 style="margin:0;color:#1A989D;font-size:15px;">${s.tratamiento}</h3>
-          <span style="color:#888;font-size:13px;">📅 ${formatDate(s.fecha)}</span>
-        </div>
-        ${s.productos ? `<p style="margin:5px 0;font-size:13px;"><strong>Productos:</strong> ${s.productos}</p>` : ''}
-        ${s.notas ? `<p style="margin:5px 0;font-size:13px;"><strong>Notas:</strong> ${s.notas}</p>` : ''}
-      </div>
-    `)
-    .join('');
+function generatePdfBuffer(patient) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    const chunks = [];
+    doc.on('data', chunk => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
 
-  const initials = patient.nombre
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+    const TEAL   = '#1A989D';
+    const DARK   = '#293647';
+    const SLATE  = '#405570';
+    const MUTED  = '#888888';
+    const BORDER = '#c8d0db';
+    const W      = 495; // ancho útil (595 - 2*50)
+    const L      = 50;  // margen izquierdo
 
-  const age = calcAge(patient.fecha_nacimiento);
+    // ── HEADER ──────────────────────────────────────────────
+    doc.fontSize(22).fillColor(TEAL).font('Helvetica-Bold').text('Centro Dermatológico');
+    doc.fontSize(12).fillColor(SLATE).font('Helvetica').text('Historia Clínica del Paciente');
+    const headerDateY = doc.page.margins.top;
+    doc.fontSize(10).fillColor(MUTED)
+      .text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, L, headerDateY + 10, { align: 'right', width: W });
+    doc.moveDown(0.5);
+    doc.moveTo(L, doc.y).lineTo(L + W, doc.y).strokeColor(TEAL).lineWidth(2).stroke();
+    doc.moveDown(1);
 
-  return `<!DOCTYPE html><html lang="es"><head>
-    <meta charset="UTF-8"/>
-    <title>Ficha - ${patient.nombre}</title>
-    <style>
-      body{font-family:Georgia,serif;margin:0;padding:30px;color:#293647;font-size:14px;background:#fff;}
-      .header{display:flex;align-items:center;gap:20px;padding-bottom:20px;border-bottom:3px solid #1A989D;margin-bottom:24px;}
-      .foto{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #1A989D;flex-shrink:0;}
-      .foto-ph{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#1A989D,#405570);display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;color:white;flex-shrink:0;}
-      .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;}
-      .fl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
-      .fv{font-size:14px;color:#293647;font-weight:500;}
-      h2{color:#405570;font-size:17px;margin:22px 0 12px;border-bottom:1px solid #c8d0db;padding-bottom:6px;}
-    </style></head><body>
-    <div class="header">
-      ${patient.foto_path ? `<img src="${patient.foto_path}" class="foto"/>` : `<div class="foto-ph">${initials}</div>`}
-      <div style="flex:1">
-        <div style="font-size:22px;font-weight:bold;color:#1A989D;">Centro Dermatológico</div>
-        <div style="color:#405570;font-size:13px;">Historia Clínica del Paciente</div>
-      </div>
-      <div style="text-align:right;color:#aaa;font-size:11px;">Generado: ${new Date().toLocaleDateString('es-AR')}</div>
-    </div>
-    <h2>Datos Personales</h2>
-    <div class="grid">
-      <div><div class="fl">Nombre completo</div><div class="fv">${patient.nombre}</div></div>
-      <div><div class="fl">DNI</div><div class="fv">${patient.dni}</div></div>
-      ${patient.fecha_nacimiento ? `<div><div class="fl">Fecha de nacimiento</div><div class="fv">${formatDate(patient.fecha_nacimiento)}${age ? ` (${age} años)` : ''}</div></div>` : ''}
-      ${patient.telefono ? `<div><div class="fl">Teléfono</div><div class="fv">${patient.telefono}</div></div>` : ''}
-      ${patient.email ? `<div><div class="fl">Email</div><div class="fv">${patient.email}</div></div>` : ''}
-      ${patient.direccion ? `<div><div class="fl">Dirección</div><div class="fv">${patient.direccion}</div></div>` : ''}
-      ${patient.obra_social ? `<div><div class="fl">Obra Social</div><div class="fv">${patient.obra_social}</div></div>` : ''}
-      ${patient.nro_afiliado ? `<div><div class="fl">Nro. Afiliado</div><div class="fv">${patient.nro_afiliado}</div></div>` : ''}
-    </div>
-    ${patient.motivo_consulta ? `<div style="margin-top:14px;padding:12px 16px;background:#f4f6f9;border-radius:8px;border-left:3px solid #1A989D;"><div class="fl">Motivo de consulta / Antecedentes</div><div class="fv" style="margin-top:4px;">${patient.motivo_consulta}</div></div>` : ''}
-    <h2>Historial de Sesiones (${patient.sesiones.length})</h2>
-    ${patient.sesiones.length > 0 ? sesiones : `<p style="color:#aaa;font-style:italic;">Sin sesiones registradas.</p>`}
-    <div style="margin-top:40px;padding-top:14px;border-top:1px solid #eee;text-align:center;color:#bbb;font-size:11px;">
-      Sistema de Gestión Instituto Cerrolaza · ${new Date().toLocaleString('es-AR')}
-    </div>
-  </body></html>`;
-}
+    // ── DATOS PERSONALES ────────────────────────────────────
+    doc.fontSize(14).fillColor(SLATE).font('Helvetica-Bold').text('Datos Personales');
+    doc.moveTo(L, doc.y + 2).lineTo(L + W, doc.y + 2).strokeColor(BORDER).lineWidth(1).stroke();
+    doc.moveDown(0.7);
 
-async function generatePdfBuffer(html) {
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    const age = calcAge(patient.fecha_nacimiento);
+    const fields = [
+      ['Nombre completo', patient.nombre],
+      ['DNI', patient.dni],
+      patient.fecha_nacimiento
+        ? ['Fecha de nacimiento', `${formatDate(patient.fecha_nacimiento)}${age ? ` (${age} años)` : ''}`]
+        : null,
+      patient.telefono    ? ['Teléfono',      patient.telefono]    : null,
+      patient.email       ? ['Email',          patient.email]       : null,
+      patient.direccion   ? ['Dirección',      patient.direccion]   : null,
+      patient.obra_social ? ['Obra Social',    patient.obra_social] : null,
+      patient.nro_afiliado ? ['Nro. Afiliado', patient.nro_afiliado] : null,
+    ].filter(Boolean);
+
+    // 2 columnas con posicionamiento absoluto
+    const colW = 220;
+    const col0 = L;
+    const col1 = L + colW + 35;
+    let rowY = doc.y;
+
+    fields.forEach(([label, value], i) => {
+      const isLeft = i % 2 === 0;
+      const x = isLeft ? col0 : col1;
+
+      if (isLeft) {
+        rowY = doc.y;
+      } else {
+        doc.y = rowY;
+      }
+
+      doc.fontSize(9).fillColor(MUTED).font('Helvetica')
+        .text(label.toUpperCase(), x, doc.y, { width: colW });
+      doc.fontSize(13).fillColor(DARK).font('Helvetica')
+        .text(String(value), x, doc.y, { width: colW });
+
+      if (!isLeft) {
+        doc.y = doc.y + 6;
+      }
+    });
+    doc.moveDown(1);
+
+    // Motivo de consulta
+    if (patient.motivo_consulta) {
+      const textY = doc.y + 8;
+      doc.fontSize(9).fillColor(MUTED).font('Helvetica')
+        .text('MOTIVO DE CONSULTA / ANTECEDENTES', L + 10, textY, { width: W - 20 });
+      doc.fontSize(13).fillColor(DARK).font('Helvetica')
+        .text(patient.motivo_consulta, L + 10, doc.y + 2, { width: W - 20 });
+      const boxH = doc.y - textY + 14;
+      doc.rect(L - 2, textY - 8, W + 4, boxH).strokeColor(TEAL).lineWidth(1).stroke();
+      doc.moveDown(1);
+    }
+
+    // ── SESIONES ────────────────────────────────────────────
+    const sesiones = [...patient.sesiones].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    doc.fontSize(14).fillColor(SLATE).font('Helvetica-Bold')
+      .text(`Historial de Sesiones (${sesiones.length})`);
+    doc.moveTo(L, doc.y + 2).lineTo(L + W, doc.y + 2).strokeColor(BORDER).lineWidth(1).stroke();
+    doc.moveDown(0.7);
+
+    if (sesiones.length === 0) {
+      doc.fontSize(12).fillColor(MUTED).font('Helvetica').text('Sin sesiones registradas.');
+    } else {
+      sesiones.forEach((s) => {
+        if (doc.y > 700) doc.addPage();
+        const boxTop = doc.y;
+
+        doc.fontSize(14).fillColor(TEAL).font('Helvetica-Bold')
+          .text(s.tratamiento, L + 8, doc.y, { continued: true, width: W - 120 });
+        doc.fontSize(12).fillColor(MUTED).font('Helvetica')
+          .text(formatDate(s.fecha), { align: 'right', width: 110 });
+        doc.moveDown(0.3);
+
+        if (s.productos) {
+          doc.fontSize(11).fillColor(DARK).font('Helvetica-Bold')
+            .text('Productos: ', L + 8, doc.y, { continued: true });
+          doc.font('Helvetica').fillColor(SLATE).text(s.productos);
+        }
+        if (s.notas) {
+          doc.fontSize(11).fillColor(DARK).font('Helvetica-Bold')
+            .text('Notas: ', L + 8, doc.y, { continued: true });
+          doc.font('Helvetica').fillColor(SLATE).text(s.notas);
+        }
+
+        const boxH = doc.y - boxTop + 10;
+        doc.rect(L - 2, boxTop - 4, W + 4, boxH).strokeColor(BORDER).lineWidth(1).stroke();
+        doc.moveDown(1);
+      });
+    }
+
+    // ── FOOTER ──────────────────────────────────────────────
+    doc.moveDown(1);
+    doc.moveTo(L, doc.y).lineTo(L + W, doc.y).strokeColor('#eeeeee').lineWidth(1).stroke();
+    doc.moveDown(0.4);
+    doc.fontSize(10).fillColor(MUTED).font('Helvetica')
+      .text(`Sistema de Gestión Instituto Cerrolaza · ${new Date().toLocaleString('es-AR')}`, { align: 'center', width: W });
+
+    doc.end();
   });
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
-  const pdf = await page.pdf({ format: 'A4', printBackground: true });
-  await browser.close();
-  return pdf;
 }
 
 async function sendFichaEmail(patient) {
   const transporter = createTransporter();
-  const html = buildFichaHtml(patient);
-  const pdfBuffer = await generatePdfBuffer(html);
+  const pdfBuffer = await generatePdfBuffer(patient);
   const safeName = patient.nombre.replace(/\s+/g, '-');
 
   await transporter.sendMail({
