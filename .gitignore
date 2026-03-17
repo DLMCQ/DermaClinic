@@ -1,7 +1,9 @@
 # Dependencies
 node_modules/
 package-lock.json
-
+# Archive files .md
+Agentcontext.md
+GUIA_AGENTES.md
 # Environment variables
 .env
 .env.local
